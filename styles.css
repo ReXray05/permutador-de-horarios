@@ -1028,3 +1028,76 @@ body[data-theme="dark"] .month-day.is-today .month-day-number{color:#fff}
   .title-stack{align-items:flex-start}
   .view-tabs{order:3}
 }
+
+
+/* ===== Código secreto / tema Rosita ===== */
+.secret-code-form{
+  display:grid;
+  grid-template-columns:1fr auto;
+  gap:8px;
+}
+.secret-code-form input{
+  min-height:40px;
+  padding:8px 10px;
+  border:1px solid var(--border);
+  border-radius:10px;
+  background:var(--panel-2);
+  color:var(--text);
+  outline:none;
+}
+.secret-code-form input:focus{
+  border-color:var(--accent);
+  box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 12%,transparent);
+}
+
+body[data-theme="rosita"]{
+  --bg:#fff7fb;
+  --panel:#fffdfd;
+  --panel-2:#fff0f7;
+  --text:#5f3d52;
+  --muted:#9b7088;
+  --border:#f3cfe0;
+  --accent:#e99bc1;
+  --accent-soft:#fde4f1;
+  --danger:#d86a95;
+}
+body[data-theme="rosita"] .day-column{
+  background-color:#fffdfd;
+}
+body[data-theme="rosita"] .corner,
+body[data-theme="rosita"] .day-head,
+body[data-theme="rosita"] .time-column,
+body[data-theme="rosita"] .month-weekdays{
+  background:#fff0f7;
+}
+body[data-theme="rosita"] .card,
+body[data-theme="rosita"] .event-modal,
+body[data-theme="rosita"] .settings-panel{
+  box-shadow:0 8px 24px rgba(214,130,171,.08);
+}
+body[data-theme="rosita"] .btn.primary{
+  background:#fbe0ed;
+  border-color:#e99bc1;
+}
+body[data-theme="rosita"] .now-toggle.active{
+  background:#fff0f5;
+  border-color:#ef8db7;
+  color:#b94f7c;
+}
+body[data-theme="rosita"] .day-head.is-today{
+  background:#fff2f7;
+  color:#b94f7c;
+}
+body[data-theme="rosita"] .now-line,
+body[data-theme="rosita"] .now-line::before,
+body[data-theme="rosita"] .now-label,
+body[data-theme="rosita"] .month-day.is-today .month-day-number{
+  background:#ef8db7;
+}
+body[data-theme="rosita"] .view-tab.active{
+  box-shadow:0 2px 8px rgba(219,128,170,.14);
+}
+body[data-theme="rosita"] .theme-option[data-theme-choice="rosita"]{
+  background:linear-gradient(135deg,#ffe8f2,#f9d7e9);
+  color:#8f4d70;
+}
