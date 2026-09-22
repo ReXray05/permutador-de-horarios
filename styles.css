@@ -1647,3 +1647,59 @@ body[data-theme="rosita"] .theme-option[data-theme-choice="rosita"]{
     overflow:hidden;
   }
 }
+
+
+@media(max-width:700px){
+  .mobile-edit-toggle{
+    grid-column:2;
+    grid-row:1;
+    justify-self:end;
+    min-height:34px;
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    padding:6px 9px;
+    border:1px solid var(--border);
+    border-radius:10px;
+    background:var(--panel);
+    color:var(--muted);
+    font-size:10px;
+    font-weight:850;
+  }
+
+  .mobile-edit-toggle.is-unlocked{
+    border-color:var(--accent);
+    background:var(--accent-soft);
+    color:var(--accent);
+  }
+
+  .mobile-edit-icon{
+    font-size:13px;
+    line-height:1;
+  }
+
+  .mobile-edit-label{
+    white-space:nowrap;
+  }
+
+  body.mobile-edit-locked .event{
+    cursor:default;
+  }
+
+  body.mobile-edit-locked .resize-handle{
+    display:none;
+  }
+
+  body.mobile-edit-locked .mobile-agenda-add,
+  body.mobile-edit-locked [data-mobile-nav="add"]{
+    opacity:.4;
+  }
+
+  body.mobile-edit-locked .subject-chip{
+    cursor:default;
+  }
+
+  body.mobile-edit-locked .mobile-agenda-event{
+    cursor:default;
+  }
+}
