@@ -1,7 +1,7 @@
 {
-  "name": "Planificador semanal",
+  "name": "Planificador universitario",
   "short_name": "Planificador",
-  "description": "Planificador semanal universitario local-first.",
+  "description": "Planificador local-first para horarios, exámenes, entregas y trabajos.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
