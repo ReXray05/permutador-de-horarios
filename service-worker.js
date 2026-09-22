@@ -1,11 +1,11 @@
-const CACHE_NAME = 'planificador-semanal-v10';
+const CACHE_NAME = 'planificador-semanal-v12';
 const APP_SHELL = [
   './',
   './index.html',
-  './styles.css',
-  './app.js',
-  './month.js',
-  './mobile.js',
+  './styles.css?v=12',
+  './app.js?v=12',
+  './month.js?v=12',
+  './mobile.js?v=12',
   './manifest.webmanifest',
   './icons/icon.svg'
 ];
@@ -31,19 +31,25 @@ self.addEventListener('activate', event => {
 self.addEventListener('fetch', event => {
   if (event.request.method !== 'GET') return;
 
-  event.respondWith(
-    caches.match(event.request).then(cached => {
-      if (cached) return cached;
+  const url = new URL(event.request.url);
+  const sameOrigin = url.origin === self.location.origin;
 
-      return fetch(event.request).then(response => {
-        if (!response || response.status !== 200 || response.type === 'opaque') return response;
-        const copy = response.clone();
-        caches.open(CACHE_NAME).then(cache => cache.put(event.request, copy));
+  if (!sameOrigin) return;
+
+  event.respondWith(
+    fetch(event.request)
+      .then(response => {
+        if (response && response.status === 200) {
+          const copy = response.clone();
+          caches.open(CACHE_NAME).then(cache => cache.put(event.request, copy));
+        }
         return response;
-      }).catch(() => {
+      })
+      .catch(async () => {
+        const cached = await caches.match(event.request);
+        if (cached) return cached;
         if (event.request.mode === 'navigate') return caches.match('./index.html');
         throw new Error('offline');
-      });
-    })
+      })
   );
 });
