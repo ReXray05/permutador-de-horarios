@@ -22,13 +22,15 @@
   function createMobileUI() {
     if ($('#mobileBottomNav')) return;
 
-    const editToggle = document.createElement('button');
-    editToggle.id = 'mobileEditToggle';
-    editToggle.className = 'mobile-edit-toggle';
-    editToggle.type = 'button';
-    editToggle.setAttribute('aria-pressed','false');
-    editToggle.innerHTML = '<span class="mobile-edit-icon">🔒</span><span class="mobile-edit-label">Bloqueado</span>';
-    $('.schedule-switcher')?.insertAdjacentElement('afterend',editToggle);
+    if (!$('#mobileEditToggle')) {
+      const editToggle = document.createElement('button');
+      editToggle.id = 'mobileEditToggle';
+      editToggle.className = 'mobile-edit-toggle';
+      editToggle.type = 'button';
+      editToggle.setAttribute('aria-pressed','false');
+      editToggle.innerHTML = '<span class="mobile-edit-icon">🔒</span><span class="mobile-edit-label">Bloqueado</span>';
+      $('.schedule-switcher')?.insertAdjacentElement('afterend',editToggle);
+    }
 
     const weekTools = document.createElement('div');
     weekTools.id = 'mobileWeekTools';
