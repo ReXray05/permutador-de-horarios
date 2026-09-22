@@ -200,12 +200,59 @@
     });
   }
 
+  function closeTransientPanels() {
+    closeSheet();
+
+    const eventBackdrop = $('#eventModalBackdrop');
+    if (eventBackdrop && !eventBackdrop.classList.contains('hidden')) {
+      $('#cancelEventBtn')?.click();
+      eventBackdrop.classList.add('hidden');
+      eventBackdrop.setAttribute('aria-hidden','true');
+    }
+
+    const settingsBackdrop = $('#settingsBackdrop');
+    if (settingsBackdrop && !settingsBackdrop.classList.contains('hidden')) {
+      $('#closeSettingsBtn')?.click();
+      settingsBackdrop.classList.add('hidden');
+      settingsBackdrop.setAttribute('aria-hidden','true');
+    }
+  }
+
+  function forceView(view) {
+    const normalized = view === 'month' ? 'month' : 'week';
+
+    $('#weekView')?.classList.toggle('hidden',normalized !== 'week');
+    $('#monthView')?.classList.toggle('hidden',normalized !== 'month');
+
+    $('.view-tab').forEach(button => {
+      const active = button.dataset.view === normalized;
+      button.classList.toggle('active',active);
+      button.setAttribute('aria-selected',String(active));
+    });
+
+    $('.week-only-action').forEach(node => {
+      node.classList.toggle('hidden',normalized !== 'week');
+    });
+
+    localStorage.setItem(VIEW_KEY,normalized);
+  }
+
   function switchView(view) {
-    const tab = $('.view-tab[data-view="' + view + '"]');
+    const normalized = view === 'month' ? 'month' : 'week';
+    closeTransientPanels();
+
+    const tab = $('.view-tab[data-view="' + normalized + '"]');
     tab?.click();
-    localStorage.setItem(VIEW_KEY,view);
-    syncBottomNav();
-    window.scrollTo({top:0,behavior:'smooth'});
+
+    requestAnimationFrame(() => {
+      const target = normalized === 'week' ? $('#weekView') : $('#monthView');
+      if (!target || target.classList.contains('hidden')) {
+        forceView(normalized);
+      }
+
+      syncBottomNav();
+      window.scrollTo({top:0,behavior:'smooth'});
+    });
   }
 
   function currentSelectedMonthDate() {
