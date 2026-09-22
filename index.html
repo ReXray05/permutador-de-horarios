@@ -1,0 +1,240 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#f6f7fb">
+  <meta name="description" content="Planificador semanal local-first para organizar horarios universitarios.">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Planificador">
+  <title>Planificador semanal</title>
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="icon" href="./icons/icon.svg" sizes="192x192">
+  <link rel="apple-touch-icon" href="./icons/icon.svg">
+  <link rel="stylesheet" href="./styles.css">
+  <script defer src="./app.js"></script>
+</head>
+<body>
+<main class="app" id="app">
+  <header class="topbar">
+    <div class="title-stack">
+      <h1>Planificador semanal</h1>
+      <label class="schedule-switcher" aria-label="Horario activo">
+        <span>Horario</span>
+        <select id="scheduleSelect"></select>
+      </label>
+    </div>
+
+    <div class="actions">
+      <button class="btn" id="undoBtn" type="button" disabled>Deshacer</button>
+      <button class="btn" id="clearBtn" type="button">Limpiar</button>
+      <button class="btn now-toggle active" id="nowToggleBtn" type="button" aria-pressed="true">Ahora</button>
+      <button class="btn settings-btn" id="settingsBtn" type="button"><span class="settings-icon">⚙</span><span>Ajustes</span></button>
+
+      <div class="export-group">
+        <select id="exportType" aria-label="Formato de exportación">
+          <option value="png">PNG</option>
+          <option value="jpg">JPG</option>
+          <option value="pdf">PDF</option>
+          <option value="xlsx">Excel</option>
+          <option value="svg">SVG</option>
+          <option value="html-live">HTML interactivo · hora en vivo</option>
+        </select>
+        <button class="btn primary" id="exportBtn" type="button">Exportar</button>
+      </div>
+    </div>
+  </header>
+
+  <div class="layout">
+    <section>
+      <div class="card calendar-card">
+        <div class="calendar-scroll">
+          <div class="calendar" id="calendar">
+            <div class="corner sticky-left">Hora</div>
+            <div class="day-head">Lunes</div>
+            <div class="day-head">Martes</div>
+            <div class="day-head">Miércoles</div>
+            <div class="day-head">Jueves</div>
+            <div class="day-head">Viernes</div>
+
+            <div id="timeColumn" class="time-column sticky-left"></div>
+            <div class="day-column" data-day="0"></div>
+            <div class="day-column" data-day="1"></div>
+            <div class="day-column" data-day="2"></div>
+            <div class="day-column" data-day="3"></div>
+            <div class="day-column" data-day="4"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <aside class="sidebar">
+      <section class="card side-card">
+        <div class="section-head"><strong>Asignaturas</strong><span>14</span></div>
+        <div id="subjectList" class="subject-list"></div>
+      </section>
+
+      <section class="card side-card filters-card">
+        <div class="section-head">
+          <strong>Filtros</strong>
+          <button id="resetFiltersBtn" class="text-btn" type="button">Restablecer</button>
+        </div>
+
+        <label class="field">Tipo
+          <select id="labFilter">
+            <option value="all">Todos</option>
+            <option value="lab">Solo LAB</option>
+            <option value="nonlab">Solo no LAB</option>
+          </select>
+        </label>
+
+        <label class="field">Curso
+          <select id="courseFilter">
+            <option value="all">3.º + 4.º</option>
+            <option value="3">Solo 3.º</option>
+            <option value="4">Solo 4.º</option>
+          </select>
+        </label>
+
+        <label class="field">Asignatura
+          <select id="subjectFilter">
+            <option value="all">Todas</option>
+          </select>
+        </label>
+
+        <label class="field">Marco
+          <select id="frameFilter">
+            <option value="all">Todos</option>
+            <option value="framed">Con cualquier marco</option>
+            <option value="none">Sin marco</option>
+          </select>
+        </label>
+
+        <div class="field">
+          <span>Color del marco</span>
+          <div id="frameColorFilter" class="frame-color-filter" aria-label="Filtrar por color de marco"></div>
+        </div>
+
+        <div id="filterSummary" class="filter-summary">Mostrando todos los bloques.</div>
+      </section>
+
+      <section id="editor" class="card editor hidden">
+        <strong id="editorHeading">Bloque seleccionado</strong>
+        <p id="editorTitle"></p>
+
+        <div class="edit-grid">
+          <button id="earlierBtn" class="mini-btn" type="button">Inicio −30</button>
+          <button id="laterBtn" class="mini-btn" type="button">Inicio +30</button>
+          <button id="shorterBtn" class="mini-btn" type="button">Duración −30</button>
+          <button id="longerBtn" class="mini-btn" type="button">Duración +30</button>
+        </div>
+
+        <button id="deleteSelectedBtn" class="mini-btn full" type="button">Eliminar selección</button>
+      </section>
+    </aside>
+  </div>
+
+  <div id="settingsBackdrop" class="settings-backdrop hidden" aria-hidden="true">
+    <aside class="settings-panel" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
+      <div class="settings-head">
+        <h2 id="settingsTitle">Ajustes</h2>
+        <button id="closeSettingsBtn" class="icon-btn" type="button" aria-label="Cerrar ajustes">×</button>
+      </div>
+
+      <section class="settings-section">
+        <h3>Apariencia</h3>
+        <div class="theme-options">
+          <button class="theme-option" data-theme-choice="light" type="button">Claro</button>
+          <button class="theme-option" data-theme-choice="dark" type="button">Oscuro</button>
+          <button class="theme-option" data-theme-choice="system" type="button">Sistema</button>
+        </div>
+      </section>
+
+      <section class="settings-section">
+        <h3>Horarios locales</h3>
+        <p class="settings-note">Cada horario se guarda únicamente en este navegador.</p>
+        <div class="settings-actions-grid">
+          <button id="newScheduleBtn" class="settings-action" type="button">Nuevo horario</button>
+          <button id="renameScheduleBtn" class="settings-action" type="button">Renombrar</button>
+          <button id="deleteScheduleBtn" class="settings-action danger-soft" type="button">Eliminar</button>
+        </div>
+      </section>
+
+      <section class="settings-section">
+        <h3>Copia de seguridad</h3>
+        <p class="settings-note">Exporta el horario actual a JSON para guardarlo o pasárselo a otra persona.</p>
+        <div class="settings-actions-grid">
+          <button id="backupScheduleBtn" class="settings-action" type="button">Exportar JSON</button>
+          <button id="importScheduleBtn" class="settings-action" type="button">Importar JSON</button>
+        </div>
+        <input id="importScheduleInput" class="hidden" type="file" accept=".json,application/json">
+      </section>
+
+      <section class="settings-section">
+        <h3>Instalación</h3>
+        <p class="settings-note">Al publicarse por HTTPS puede instalarse como una app y seguir funcionando sin conexión.</p>
+        <button id="installAppBtn" class="settings-action full-width hidden" type="button">Instalar aplicación</button>
+        <div id="installHelp" class="settings-note">Si el botón no aparece, usa el menú del navegador → “Instalar aplicación” o “Añadir a pantalla de inicio”.</div>
+      </section>
+
+      <section class="settings-section">
+        <h3>Documentación</h3>
+        <div class="docs">
+          <div class="doc-row"><strong>Añadir.</strong> Arrastra una asignatura al calendario. En pantalla táctil también puedes tocarla y después tocar la franja.</div>
+          <div class="doc-row"><strong>Duración.</strong> Arrastra el borde superior o inferior del bloque. Los cambios se ajustan a intervalos de 30 minutos.</div>
+          <div class="doc-row"><strong>Multiselección.</strong> Usa Ctrl/⌘ + clic o Shift + clic. Las acciones del menú contextual se aplican al conjunto.</div>
+          <div class="doc-row"><strong>Menú contextual.</strong> Clic derecho para LAB, marco, color, opacidad, duplicar o eliminar.</div>
+          <div class="doc-row"><strong>Duplicar.</strong> Tras pulsar duplicar, el bloque queda preparado para colocarse con un clic. Esc cancela.</div>
+          <div class="doc-row"><strong>Ahora.</strong> El botón superior activa o desactiva la línea del momento actual.</div>
+        </div>
+      </section>
+    </aside>
+  </div>
+
+  <div id="status" class="toast hidden" aria-live="polite"></div>
+
+  <div id="contextMenu" class="context-menu hidden" role="menu" aria-label="Acciones del bloque">
+    <div id="contextTitle" class="context-title"></div>
+
+    <button id="toggleLabBtn" class="menu-item" type="button" role="menuitemcheckbox" aria-checked="false">
+      <span class="menu-icon lab-icon">LAB</span>
+      <span>Marcar como LAB</span>
+      <span class="check">✓</span>
+    </button>
+
+    <button id="toggleFrameBtn" class="menu-item" type="button" role="menuitemcheckbox" aria-checked="false">
+      <span class="menu-icon frame-icon"></span>
+      <span>Mostrar marco</span>
+      <span class="check">✓</span>
+    </button>
+
+    <label class="menu-field">
+      <span>Color del marco</span>
+      <input id="frameColorInput" type="color" value="#dc2626" />
+    </label>
+
+    <label class="menu-field opacity-field">
+      <span>Opacidad <strong id="opacityValue">100%</strong></span>
+      <input id="opacityInput" type="range" min="20" max="100" step="5" value="100" />
+    </label>
+
+    <div class="menu-separator"></div>
+
+    <button id="duplicateBtn" class="menu-item" type="button">
+      <span class="menu-symbol">⧉</span>
+      <span>Duplicar</span>
+    </button>
+
+    <button id="deleteBtn" class="menu-item danger" type="button">
+      <span class="menu-symbol">×</span>
+      <span>Eliminar</span>
+    </button>
+  </div>
+
+  <div id="duplicateCursor" class="duplicate-cursor hidden">
+    Duplicando · clic para colocar · Esc cancelar
+  </div>
+</main>
+</body>
+</html>
