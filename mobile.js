@@ -149,7 +149,7 @@
       column.classList.toggle('mobile-active',index === normalized);
     });
 
-    $$('.mobile-day-tab').forEach(button => {
+    $$$('.mobile-day-tab').forEach(button => {
       const active = Number(button.dataset.mobileDay) === normalized;
       button.classList.toggle('active',active);
       button.setAttribute('aria-selected',String(active));
@@ -230,13 +230,13 @@
     $('#weekView')?.classList.toggle('hidden',normalized !== 'week');
     $('#monthView')?.classList.toggle('hidden',normalized !== 'month');
 
-    $('.view-tab').forEach(button => {
+    $$('.view-tab').forEach(button => {
       const active = button.dataset.view === normalized;
       button.classList.toggle('active',active);
       button.setAttribute('aria-selected',String(active));
     });
 
-    $('.week-only-action').forEach(node => {
+    $$('.week-only-action').forEach(node => {
       node.classList.toggle('hidden',normalized !== 'week');
     });
 
@@ -380,7 +380,7 @@
       notify('Activa la edición arriba para modificar el horario.');
     },true);
 
-    $('.mobile-day-tab').forEach(btn => {
+    $$('.mobile-day-tab').forEach(btn => {
       btn.addEventListener('click',() => setMobileDay(btn.dataset.mobileDay));
     });
 
