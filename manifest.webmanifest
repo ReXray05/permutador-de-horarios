@@ -1,0 +1,19 @@
+{
+  "name": "Planificador semanal",
+  "short_name": "Planificador",
+  "description": "Planificador semanal universitario local-first.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f6f7fb",
+  "theme_color": "#5967f2",
+  "lang": "es",
+  "icons": [
+    {
+      "src": "./icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
