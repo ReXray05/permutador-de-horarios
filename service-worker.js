@@ -1,11 +1,11 @@
-const CACHE_NAME = 'planificador-semanal-v12';
+const CACHE_NAME = 'planificador-semanal-v13';
 const APP_SHELL = [
   './',
   './index.html',
-  './styles.css?v=12',
-  './app.js?v=12',
-  './month.js?v=12',
-  './mobile.js?v=12',
+  './styles.css?v=13',
+  './app.js?v=13',
+  './month.js?v=13',
+  './mobile.js?v=13',
   './manifest.webmanifest',
   './icons/icon.svg'
 ];
