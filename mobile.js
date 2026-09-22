@@ -9,6 +9,7 @@
 
   let selectedMonthDate = null;
   let sheetRestore = null;
+  let editUnlocked = false;
 
   function isMobile() {
     return window.matchMedia('(max-width: 700px)').matches;
@@ -20,6 +21,14 @@
 
   function createMobileUI() {
     if ($('#mobileBottomNav')) return;
+
+    const editToggle = document.createElement('button');
+    editToggle.id = 'mobileEditToggle';
+    editToggle.className = 'mobile-edit-toggle';
+    editToggle.type = 'button';
+    editToggle.setAttribute('aria-pressed','false');
+    editToggle.innerHTML = '<span class="mobile-edit-icon">🔒</span><span class="mobile-edit-label">Bloqueado</span>';
+    $('.schedule-switcher')?.insertAdjacentElement('afterend',editToggle);
 
     const weekTools = document.createElement('div');
     weekTools.id = 'mobileWeekTools';
@@ -73,6 +82,47 @@
     document.body.appendChild(sheet);
 
     bindMobileUI();
+  }
+
+  function notify(message) {
+    const node = $('#status');
+    if (!node) return;
+    node.textContent = message;
+    node.classList.remove('hidden');
+    clearTimeout(notify.timer);
+    notify.timer = setTimeout(() => node.classList.add('hidden'), 1800);
+  }
+
+  function syncEditLockUI() {
+    const button = $('#mobileEditToggle');
+    if (!button) return;
+
+    button.setAttribute('aria-pressed',String(editUnlocked));
+    button.classList.toggle('is-unlocked',editUnlocked);
+    button.querySelector('.mobile-edit-icon').textContent = editUnlocked ? '🔓' : '🔒';
+    button.querySelector('.mobile-edit-label').textContent = editUnlocked ? 'Editando' : 'Bloqueado';
+
+    document.body.classList.toggle('mobile-edit-unlocked',editUnlocked);
+    document.body.classList.toggle('mobile-edit-locked',!editUnlocked);
+
+    const addNav = $('[data-mobile-nav="add"]');
+    if (addNav) {
+      addNav.toggleAttribute('disabled',!editUnlocked);
+      addNav.setAttribute('aria-disabled',String(!editUnlocked));
+    }
+
+    $('#mobileAgendaAdd')?.toggleAttribute('disabled',!editUnlocked);
+
+    if (!editUnlocked) {
+      closeSheet();
+      $('#cancelEventBtn')?.click();
+    }
+  }
+
+  function setEditUnlocked(value) {
+    editUnlocked = Boolean(value);
+    syncEditLockUI();
+    notify(editUnlocked ? 'Edición activada.' : 'Edición bloqueada.');
   }
 
   function setMobileDay(day) {
@@ -239,7 +289,43 @@
   }
 
   function bindMobileUI() {
-    $$('.mobile-day-tab').forEach(btn => {
+    $('#mobileEditToggle')?.addEventListener('click',() => {
+      setEditUnlocked(!editUnlocked);
+    });
+
+    document.addEventListener('pointerdown',event => {
+      if (!isMobile() || editUnlocked) return;
+
+      const blocked = event.target.closest(
+        '.event, .resize-handle, .subject-chip, .mobile-agenda-event, #addMonthEventBtn, #mobileAgendaAdd'
+      );
+
+      if (!blocked) return;
+      event.preventDefault();
+      event.stopImmediatePropagation();
+    },true);
+
+    document.addEventListener('contextmenu',event => {
+      if (!isMobile() || editUnlocked) return;
+      if (!event.target.closest('.event')) return;
+      event.preventDefault();
+      event.stopImmediatePropagation();
+    },true);
+
+    document.addEventListener('click',event => {
+      if (!isMobile() || editUnlocked) return;
+
+      const blocked = event.target.closest(
+        '.day-column, .subject-chip, .mobile-agenda-event, #addMonthEventBtn, #mobileAgendaAdd, [data-mobile-add-date]'
+      );
+
+      if (!blocked) return;
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      notify('Activa la edición arriba para modificar el horario.');
+    },true);
+
+    $('.mobile-day-tab').forEach(btn => {
       btn.addEventListener('click',() => setMobileDay(btn.dataset.mobileDay));
     });
 
@@ -270,6 +356,11 @@
       }
 
       if (action === 'add') {
+        if (!editUnlocked) {
+          notify('Activa la edición arriba para añadir elementos.');
+          return;
+        }
+
         if (currentView() === 'month') {
           openAddForSelectedMonthDay();
         } else {
@@ -292,6 +383,9 @@
       if (!isMobile()) return;
 
       if (event.target.closest('[data-add-date]')) return;
+
+      const chip = event.target.closest('[data-month-event-id]');
+      if (chip && editUnlocked) return;
 
       const cell = event.target.closest('.month-day[data-date]');
       if (!cell) return;
@@ -332,6 +426,7 @@
     }
 
     syncBottomNav();
+    syncEditLockUI();
   }
 
   createMobileUI();
