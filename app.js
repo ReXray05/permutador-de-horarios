@@ -1618,6 +1618,16 @@
   ========================================================== */
 
   const THEME_KEY = 'weekly-planner-theme';
+  const ROSITA_UNLOCK_KEY = 'weekly-planner-rosita-unlocked-v1';
+
+  function rositaUnlocked() {
+    return localStorage.getItem(ROSITA_UNLOCK_KEY) === '1';
+  }
+
+  function refreshSecretUnlocks() {
+    const rositaButton = $('.rosita-theme-option');
+    if (rositaButton) rositaButton.classList.toggle('hidden', !rositaUnlocked());
+  }
 
   function resolveTheme(choice) {
     if (choice === 'system') {
@@ -1627,7 +1637,9 @@
   }
 
   function applyTheme(choice) {
-    const normalized = ['light','dark','system'].includes(choice) ? choice : 'system';
+    const allowed = ['light','dark','system'];
+    if (rositaUnlocked()) allowed.push('rosita');
+    const normalized = allowed.includes(choice) ? choice : 'system';
     document.body.dataset.theme = resolveTheme(normalized);
     localStorage.setItem(THEME_KEY, normalized);
 
@@ -1650,6 +1662,33 @@
 
   $('#settingsBtn').addEventListener('click', openSettings);
   $('#closeSettingsBtn').addEventListener('click', closeSettings);
+
+  refreshSecretUnlocks();
+
+  $('#secretCodeForm')?.addEventListener('submit', event => {
+    event.preventDefault();
+    const input = $('#secretCodeInput');
+    const code = String(input?.value || '').trim().toLowerCase();
+
+    if (code === 'lmp') {
+      const clonedDefault = DEFAULT_EVENTS.map(item => ({...item, id:uid()}));
+      input.value = '';
+      createSchedule('LMP', clonedDefault);
+      return;
+    }
+
+    if (code === 'rosita') {
+      localStorage.setItem(ROSITA_UNLOCK_KEY, '1');
+      refreshSecretUnlocks();
+      applyTheme('rosita');
+      input.value = '';
+      announce('Tema Rosita desbloqueado.');
+      return;
+    }
+
+    if (input) input.value = '';
+    announce('Código no reconocido.');
+  });
 
   refreshScheduleSelector();
 
