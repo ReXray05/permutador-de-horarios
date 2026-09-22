@@ -393,5 +393,31 @@
     Duplicando · clic para colocar · Esc cancelar
   </div>
 </main>
+
+<nav id="mobileBottomNav" class="mobile-bottom-nav" aria-label="Navegación principal">
+  <button type="button" class="mobile-nav-btn" data-mobile-nav="week">
+    <span class="mobile-nav-icon">▦</span><span>Semana</span>
+  </button>
+  <button type="button" class="mobile-nav-btn" data-mobile-nav="month">
+    <span class="mobile-nav-icon">□</span><span>Mes</span>
+  </button>
+  <button type="button" class="mobile-nav-btn mobile-nav-add" data-mobile-nav="add">
+    <span class="mobile-nav-plus">+</span><span>Añadir</span>
+  </button>
+  <button type="button" class="mobile-nav-btn" data-mobile-nav="settings">
+    <span class="mobile-nav-icon">⚙</span><span>Ajustes</span>
+  </button>
+</nav>
+
+<div id="mobileSheetBackdrop" class="mobile-sheet-backdrop hidden" aria-hidden="true">
+  <section class="mobile-sheet" role="dialog" aria-modal="true" aria-labelledby="mobileSheetTitle">
+    <div class="mobile-sheet-handle"></div>
+    <div class="mobile-sheet-head">
+      <h2 id="mobileSheetTitle">Añadir asignatura</h2>
+      <button id="closeMobileSheet" class="icon-btn" type="button" aria-label="Cerrar">×</button>
+    </div>
+    <div id="mobileSheetContent" class="mobile-sheet-content"></div>
+  </section>
+</div>
 </body>
 </html>
