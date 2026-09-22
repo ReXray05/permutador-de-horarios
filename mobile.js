@@ -121,6 +121,15 @@
 
     $('#mobileAgendaAdd')?.toggleAttribute('disabled',!editUnlocked);
 
+    ['#earlierBtn','#laterBtn','#shorterBtn','#longerBtn','#deleteSelectedBtn'].forEach(selector => {
+      const control = $(selector);
+      if (!control) return;
+      control.toggleAttribute('disabled',!editUnlocked);
+      control.setAttribute('aria-disabled',String(!editUnlocked));
+    });
+
+    $('#editor')?.classList.toggle('mobile-editor-locked',!editUnlocked);
+
     if (!editUnlocked) {
       closeSheet();
       $('#cancelEventBtn')?.click();
@@ -352,7 +361,7 @@
       if (!isMobile() || editUnlocked) return;
 
       const blocked = event.target.closest(
-        '.event, .resize-handle, .subject-chip, .mobile-agenda-event, #addMonthEventBtn, #mobileAgendaAdd'
+        '.event, .resize-handle, .subject-chip, .mobile-agenda-event, #addMonthEventBtn, #mobileAgendaAdd, #earlierBtn, #laterBtn, #shorterBtn, #longerBtn, #deleteSelectedBtn'
       );
 
       if (!blocked) return;
@@ -371,7 +380,7 @@
       if (!isMobile() || editUnlocked) return;
 
       const blocked = event.target.closest(
-        '.day-column, .subject-chip, .mobile-agenda-event, #addMonthEventBtn, #mobileAgendaAdd, [data-mobile-add-date]'
+        '.day-column, .subject-chip, .mobile-agenda-event, #addMonthEventBtn, #mobileAgendaAdd, #earlierBtn, #laterBtn, #shorterBtn, #longerBtn, #deleteSelectedBtn, [data-mobile-add-date]'
       );
 
       if (!blocked) return;
