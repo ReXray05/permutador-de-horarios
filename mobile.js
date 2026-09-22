@@ -20,8 +20,6 @@
   }
 
   function createMobileUI() {
-    if ($('#mobileBottomNav')) return;
-
     if (!$('#mobileEditToggle')) {
       const editToggle = document.createElement('button');
       editToggle.id = 'mobileEditToggle';
@@ -32,56 +30,64 @@
       $('.schedule-switcher')?.insertAdjacentElement('afterend',editToggle);
     }
 
-    const weekTools = document.createElement('div');
-    weekTools.id = 'mobileWeekTools';
-    weekTools.className = 'mobile-week-tools';
-    weekTools.innerHTML =
-      '<div class="mobile-day-tabs" role="tablist" aria-label="Día de la semana">' +
-      ['L','M','X','J','V'].map((day,index) =>
-        '<button type="button" class="mobile-day-tab" data-mobile-day="' + index +
-        '" aria-label="' + ['Lunes','Martes','Miércoles','Jueves','Viernes'][index] + '">' + day + '</button>'
-      ).join('') +
-      '</div>' +
-      '<button id="mobileFiltersBtn" class="mobile-tool-btn" type="button">Filtros</button>';
-
-    const calendarCard = $('.calendar-card');
-    calendarCard?.parentElement?.insertBefore(weekTools, calendarCard);
-
-    const agenda = document.createElement('section');
-    agenda.id = 'mobileDayAgenda';
-    agenda.className = 'mobile-day-agenda card';
-    agenda.innerHTML =
-      '<div class="mobile-agenda-head">' +
-        '<div><span class="mobile-agenda-kicker">Día seleccionado</span><strong id="mobileAgendaTitle"></strong></div>' +
-        '<button id="mobileAgendaAdd" class="mobile-agenda-add" type="button">+ Añadir</button>' +
-      '</div>' +
-      '<div id="mobileAgendaList" class="mobile-agenda-list"></div>';
-    $('.month-card')?.appendChild(agenda);
-
-    const nav = document.createElement('nav');
-    nav.id = 'mobileBottomNav';
-    nav.className = 'mobile-bottom-nav';
-    nav.setAttribute('aria-label','Navegación principal');
-    nav.innerHTML =
-      '<button type="button" class="mobile-nav-btn" data-mobile-nav="week"><span class="mobile-nav-icon">▦</span><span>Semana</span></button>' +
-      '<button type="button" class="mobile-nav-btn" data-mobile-nav="month"><span class="mobile-nav-icon">□</span><span>Mes</span></button>' +
-      '<button type="button" class="mobile-nav-btn mobile-nav-add" data-mobile-nav="add"><span class="mobile-nav-plus">+</span><span>Añadir</span></button>' +
-      '<button type="button" class="mobile-nav-btn" data-mobile-nav="settings"><span class="mobile-nav-icon">⚙</span><span>Ajustes</span></button>';
-    document.body.appendChild(nav);
-
-    const sheet = document.createElement('div');
-    sheet.id = 'mobileSheetBackdrop';
-    sheet.className = 'mobile-sheet-backdrop hidden';
-    sheet.innerHTML =
-      '<section class="mobile-sheet" role="dialog" aria-modal="true" aria-labelledby="mobileSheetTitle">' +
-        '<div class="mobile-sheet-handle"></div>' +
-        '<div class="mobile-sheet-head">' +
-          '<h2 id="mobileSheetTitle">Añadir asignatura</h2>' +
-          '<button id="closeMobileSheet" class="icon-btn" type="button" aria-label="Cerrar">×</button>' +
+    if (!$('#mobileWeekTools')) {
+      const weekTools = document.createElement('div');
+      weekTools.id = 'mobileWeekTools';
+      weekTools.className = 'mobile-week-tools';
+      weekTools.innerHTML =
+        '<div class="mobile-day-tabs" role="tablist" aria-label="Día de la semana">' +
+        ['L','M','X','J','V'].map((day,index) =>
+          '<button type="button" class="mobile-day-tab" data-mobile-day="' + index +
+          '" aria-label="' + ['Lunes','Martes','Miércoles','Jueves','Viernes'][index] + '">' + day + '</button>'
+        ).join('') +
         '</div>' +
-        '<div id="mobileSheetContent" class="mobile-sheet-content"></div>' +
-      '</section>';
-    document.body.appendChild(sheet);
+        '<button id="mobileFiltersBtn" class="mobile-tool-btn" type="button">Filtros</button>';
+
+      const calendarCard = $('.calendar-card');
+      calendarCard?.parentElement?.insertBefore(weekTools, calendarCard);
+    }
+
+    if (!$('#mobileDayAgenda')) {
+      const agenda = document.createElement('section');
+      agenda.id = 'mobileDayAgenda';
+      agenda.className = 'mobile-day-agenda card';
+      agenda.innerHTML =
+        '<div class="mobile-agenda-head">' +
+          '<div><span class="mobile-agenda-kicker">Día seleccionado</span><strong id="mobileAgendaTitle"></strong></div>' +
+          '<button id="mobileAgendaAdd" class="mobile-agenda-add" type="button">+ Añadir</button>' +
+        '</div>' +
+        '<div id="mobileAgendaList" class="mobile-agenda-list"></div>';
+      $('.month-card')?.appendChild(agenda);
+    }
+
+    if (!$('#mobileBottomNav')) {
+      const nav = document.createElement('nav');
+      nav.id = 'mobileBottomNav';
+      nav.className = 'mobile-bottom-nav';
+      nav.setAttribute('aria-label','Navegación principal');
+      nav.innerHTML =
+        '<button type="button" class="mobile-nav-btn" data-mobile-nav="week"><span class="mobile-nav-icon">▦</span><span>Semana</span></button>' +
+        '<button type="button" class="mobile-nav-btn" data-mobile-nav="month"><span class="mobile-nav-icon">□</span><span>Mes</span></button>' +
+        '<button type="button" class="mobile-nav-btn mobile-nav-add" data-mobile-nav="add"><span class="mobile-nav-plus">+</span><span>Añadir</span></button>' +
+        '<button type="button" class="mobile-nav-btn" data-mobile-nav="settings"><span class="mobile-nav-icon">⚙</span><span>Ajustes</span></button>';
+      document.body.appendChild(nav);
+    }
+
+    if (!$('#mobileSheetBackdrop')) {
+      const sheet = document.createElement('div');
+      sheet.id = 'mobileSheetBackdrop';
+      sheet.className = 'mobile-sheet-backdrop hidden';
+      sheet.innerHTML =
+        '<section class="mobile-sheet" role="dialog" aria-modal="true" aria-labelledby="mobileSheetTitle">' +
+          '<div class="mobile-sheet-handle"></div>' +
+          '<div class="mobile-sheet-head">' +
+            '<h2 id="mobileSheetTitle">Añadir asignatura</h2>' +
+            '<button id="closeMobileSheet" class="icon-btn" type="button" aria-label="Cerrar">×</button>' +
+          '</div>' +
+          '<div id="mobileSheetContent" class="mobile-sheet-content"></div>' +
+        '</section>';
+      document.body.appendChild(sheet);
+    }
 
     bindMobileUI();
   }
