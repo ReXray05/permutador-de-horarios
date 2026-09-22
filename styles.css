@@ -1703,3 +1703,12 @@ body[data-theme="rosita"] .theme-option[data-theme-choice="rosita"]{
     cursor:default;
   }
 }
+
+
+@media(max-width:700px){
+  .mobile-editor-locked .mini-btn,
+  .mobile-editor-locked button{
+    opacity:.42;
+    cursor:not-allowed;
+  }
+}
