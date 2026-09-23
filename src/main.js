@@ -6,6 +6,7 @@ import {MonthPlanner} from './month.js';
 import {GameSystem} from './game.js';
 
 const mobileStyle=document.createElement('link');mobileStyle.rel='stylesheet';mobileStyle.href='./src/mobile.css?v=20';document.head.appendChild(mobileStyle);
+const weeklyStyle=document.createElement('link');weeklyStyle.rel='stylesheet';weeklyStyle.href='./src/weekly-classic.css?v=21';document.head.appendChild(weeklyStyle);
 ensureData();applyThemeAndSkin();
 const weekly=new WeeklyPlanner(),month=new MonthPlanner();
 let mobileLocked=matchMedia('(max-width:700px)').matches;
