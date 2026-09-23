@@ -38,3 +38,15 @@ jobs:
                   print('Missing HTML id',required); sys.exit(1)
           print('Static checks OK')
           PY
+      - name: Browser smoke test
+        run: |
+          python -m http.server 8080 >/tmp/server.log 2>&1 &
+          sleep 1
+          CHROME=$(command -v google-chrome || command -v chromium || command -v chromium-browser)
+          if [ -z "$CHROME" ]; then echo "Chrome not available, skipping browser smoke test"; exit 0; fi
+          "$CHROME" --headless --no-sandbox --disable-gpu --virtual-time-budget=4000 --dump-dom http://127.0.0.1:8080/ > /tmp/dom.html
+          grep -q 'data-skin-action="mort"' /tmp/dom.html
+          grep -q 'Misión 6' /tmp/dom.html
+          grep -q 'Tienda de skins' /tmp/dom.html
+          grep -q 'Sistemas de Fabricación Flexible' /tmp/dom.html
+          echo "Browser smoke test OK"
