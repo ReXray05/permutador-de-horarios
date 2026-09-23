@@ -1,19 +1,11 @@
 {
-  "name": "Planificador universitario",
-  "short_name": "Planificador",
-  "description": "Planificador local-first para horarios, exámenes, entregas y trabajos.",
-  "start_url": "./",
-  "scope": "./",
-  "display": "standalone",
-  "background_color": "#f6f7fb",
-  "theme_color": "#5967f2",
-  "lang": "es",
-  "icons": [
-    {
-      "src": "./icons/icon.svg",
-      "sizes": "any",
-      "type": "image/svg+xml",
-      "purpose": "any maskable"
-    }
-  ]
+  "name":"Planificador universitario",
+  "short_name":"Planificador",
+  "description":"Horario semanal, calendario, misiones y skins. Todo se guarda localmente.",
+  "start_url":"./",
+  "scope":"./",
+  "display":"standalone",
+  "background_color":"#f6f7fb",
+  "theme_color":"#f6f7fb",
+  "icons":[{"src":"./icons/icon.svg","sizes":"any","type":"image/svg+xml","purpose":"any maskable"}]
 }

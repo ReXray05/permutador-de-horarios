@@ -2,150 +2,76 @@
 <html lang="es">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#f6f7fb">
-  <meta name="description" content="Planificador universitario local-first para horarios, exámenes, entregas y trabajos.">
+  <meta name="description" content="Planificador universitario local-first para horarios, calendario, misiones y skins.">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="Planificador">
   <title>Planificador universitario</title>
   <link rel="manifest" href="./manifest.webmanifest">
-  <link rel="icon" href="./icons/icon.svg" sizes="192x192">
+  <link rel="icon" href="./icons/icon.svg">
   <link rel="apple-touch-icon" href="./icons/icon.svg">
-  <link rel="stylesheet" href="./styles.css?v=13">
-  <script defer src="./app.js?v=13"></script>
-  <script defer src="./month.js?v=13"></script>
-  <script defer src="./mobile.js?v=13"></script>
+  <link rel="stylesheet" href="./styles.css?v=20">
+  <script type="module" src="./src/main.js?v=20"></script>
 </head>
 <body>
+<div id="skinPattern" class="skin-pattern hidden" aria-hidden="true"></div>
 <main class="app" id="app">
   <header class="topbar">
-    <div class="title-stack">
-      <h1>Planificador</h1>
-
-      <div class="view-tabs" role="tablist" aria-label="Vista del planificador">
-        <button class="view-tab active" type="button" data-view="week" role="tab" aria-selected="true">Semana</button>
-        <button class="view-tab" type="button" data-view="month" role="tab" aria-selected="false">Mes</button>
-      </div>
-
-      <label class="schedule-switcher" aria-label="Horario activo">
-        <span>Horario</span>
-        <select id="scheduleSelect"></select>
-      </label>
-
-      <button id="mobileEditToggle" class="mobile-edit-toggle" type="button" aria-pressed="false">
-        <span class="mobile-edit-icon">🔒</span>
-        <span class="mobile-edit-label">Bloqueado</span>
-      </button>
+    <div class="brand-row">
+      <div class="brand-block"><h1 id="appTitle">Planificador</h1><span class="version-badge">v20</span></div>
+      <div class="wallet" title="Monedas"><span>🪙</span><strong data-wallet>0</strong></div>
     </div>
 
-    <div class="actions">
-      <button class="btn week-only-action" id="undoBtn" type="button" disabled>Deshacer</button>
-      <button class="btn week-only-action" id="clearBtn" type="button">Limpiar</button>
-      <button class="btn now-toggle active week-only-action" id="nowToggleBtn" type="button" aria-pressed="true">Ahora</button>
-      <button class="btn settings-btn" id="settingsBtn" type="button"><span class="settings-icon">⚙</span><span>Ajustes</span></button>
+    <nav class="view-tabs" aria-label="Vistas principales">
+      <button id="tabWeek" class="view-tab active" type="button" data-view="week">Semana</button>
+      <button id="tabMonth" class="view-tab" type="button" data-view="month">Mes</button>
+      <button id="tabShop" class="view-tab" type="button" data-view="shop">Tienda</button>
+      <button id="tabMissions" class="view-tab" type="button" data-view="missions">Misiones</button>
+    </nav>
 
-      <div class="export-group week-only-action">
-        <select id="exportType" aria-label="Formato de exportación">
-          <option value="png">PNG</option>
-          <option value="jpg">JPG</option>
-          <option value="pdf">PDF</option>
-          <option value="xlsx">Excel</option>
-          <option value="svg">SVG</option>
-          <option value="html-live">HTML interactivo · hora en vivo</option>
-        </select>
-        <button class="btn primary" id="exportBtn" type="button">Exportar</button>
+    <div class="top-controls">
+      <label class="schedule-switcher"><span id="scheduleLabel">Horario</span><select id="scheduleSelect"></select></label>
+      <button id="mobileEditToggle" class="mobile-edit-toggle" type="button" aria-pressed="false"><span class="mobile-edit-icon">🔒</span><span class="mobile-edit-label">Bloqueado</span></button>
+      <div class="desktop-actions">
+        <button class="btn week-only-action" id="undoBtn" type="button" disabled>Deshacer</button>
+        <button class="btn week-only-action" id="clearBtn" type="button">Limpiar</button>
+        <button class="btn now-toggle active week-only-action" id="nowToggleBtn" type="button">Ahora</button>
+        <button class="btn" id="settingsBtn" type="button"><span>⚙</span><span id="settingsBtnText">Ajustes</span></button>
+        <div class="export-group week-only-action"><select id="exportType"><option value="png">PNG</option><option value="jpg">JPG</option><option value="pdf">PDF</option><option value="xlsx">Excel</option><option value="svg">SVG</option><option value="html-live">HTML interactivo</option></select><button class="btn primary" id="exportBtn">Exportar</button></div>
       </div>
     </div>
   </header>
 
   <section id="weekView" class="planner-view">
-    <div class="layout">
-      <section>
-        <div class="card calendar-card">
-          <div class="calendar-scroll">
-            <div class="calendar" id="calendar">
-              <div class="corner sticky-left">Hora</div>
-              <div class="day-head">Lunes</div>
-              <div class="day-head">Martes</div>
-              <div class="day-head">Miércoles</div>
-              <div class="day-head">Jueves</div>
-              <div class="day-head">Viernes</div>
-
-              <div id="timeColumn" class="time-column sticky-left"></div>
-              <div class="day-column" data-day="0"></div>
-              <div class="day-column" data-day="1"></div>
-              <div class="day-column" data-day="2"></div>
-              <div class="day-column" data-day="3"></div>
-              <div class="day-column" data-day="4"></div>
-            </div>
+    <div class="mobile-week-tools">
+      <div class="mobile-day-tabs"><button class="mobile-day-tab" data-mobile-day="0">L</button><button class="mobile-day-tab" data-mobile-day="1">M</button><button class="mobile-day-tab" data-mobile-day="2">X</button><button class="mobile-day-tab" data-mobile-day="3">J</button><button class="mobile-day-tab" data-mobile-day="4">V</button></div>
+    </div>
+    <div class="week-layout">
+      <section class="card calendar-card">
+        <div class="calendar-scroll">
+          <div class="calendar" id="calendar">
+            <div class="corner">Hora</div>
+            <div class="day-head" data-day="0" data-mobile-day="0">Lunes</div><div class="day-head" data-day="1" data-mobile-day="1">Martes</div><div class="day-head" data-day="2" data-mobile-day="2">Miércoles</div><div class="day-head" data-day="3" data-mobile-day="3">Jueves</div><div class="day-head" data-day="4" data-mobile-day="4">Viernes</div>
+            <div id="timeColumn" class="time-column"></div>
+            <div class="day-column" data-day="0"></div><div class="day-column" data-day="1"></div><div class="day-column" data-day="2"></div><div class="day-column" data-day="3"></div><div class="day-column" data-day="4"></div>
+            <div id="currentTimeLine" class="current-time-line hidden"><i></i><span>Ahora</span></div>
           </div>
         </div>
       </section>
 
       <aside class="sidebar">
-        <section class="card side-card">
-          <div class="section-head"><strong>Asignaturas</strong><span>14</span></div>
-          <div id="subjectList" class="subject-list"></div>
-        </section>
-
+        <section class="card side-card subject-card"><div class="section-head"><strong>Asignaturas</strong><span>14</span></div><div id="subjectList" class="subject-list"></div></section>
         <section class="card side-card filters-card">
-          <div class="section-head">
-            <strong>Filtros</strong>
-            <button id="resetFiltersBtn" class="text-btn" type="button">Restablecer</button>
-          </div>
-
-          <label class="field">Tipo
-            <select id="labFilter">
-              <option value="all">Todos</option>
-              <option value="lab">Solo LAB</option>
-              <option value="nonlab">Solo no LAB</option>
-            </select>
-          </label>
-
-          <label class="field">Curso
-            <select id="courseFilter">
-              <option value="all">3.º + 4.º</option>
-              <option value="3">Solo 3.º</option>
-              <option value="4">Solo 4.º</option>
-            </select>
-          </label>
-
-          <label class="field">Asignatura
-            <select id="subjectFilter">
-              <option value="all">Todas</option>
-            </select>
-          </label>
-
-          <label class="field">Marco
-            <select id="frameFilter">
-              <option value="all">Todos</option>
-              <option value="framed">Con cualquier marco</option>
-              <option value="none">Sin marco</option>
-            </select>
-          </label>
-
-          <div class="field">
-            <span>Color del marco</span>
-            <div id="frameColorFilter" class="frame-color-filter" aria-label="Filtrar por color de marco"></div>
-          </div>
-
-          <div id="filterSummary" class="filter-summary">Mostrando todos los bloques.</div>
+          <div class="section-head"><strong>Filtros</strong><button id="resetFiltersBtn" class="text-btn">Restablecer</button></div>
+          <label class="field">Tipo<select id="labFilter"><option value="all">Todos</option><option value="lab">Solo LAB</option><option value="nonlab">Solo no LAB</option></select></label>
+          <label class="field">Curso<select id="courseFilter"><option value="all">3.º + 4.º</option><option value="3">Solo 3.º</option><option value="4">Solo 4.º</option></select></label>
+          <label class="field">Asignatura<select id="subjectFilter"><option value="all">Todas</option></select></label>
+          <label class="field">Marco<select id="frameFilter"><option value="all">Todos</option><option value="framed">Con marco</option><option value="none">Sin marco</option></select></label>
+          <div id="filterSummary" class="filter-summary"></div>
         </section>
-
-        <section id="editor" class="card editor hidden">
-          <strong id="editorHeading">Bloque seleccionado</strong>
-          <p id="editorTitle"></p>
-
-          <div class="edit-grid">
-            <button id="earlierBtn" class="mini-btn" type="button">Inicio −30</button>
-            <button id="laterBtn" class="mini-btn" type="button">Inicio +30</button>
-            <button id="shorterBtn" class="mini-btn" type="button">Duración −30</button>
-            <button id="longerBtn" class="mini-btn" type="button">Duración +30</button>
-          </div>
-
-          <button id="deleteSelectedBtn" class="mini-btn full" type="button">Eliminar selección</button>
-        </section>
+        <section id="editor" class="card editor hidden"><strong id="editorHeading">Bloque seleccionado</strong><p id="editorTitle"></p><div class="edit-grid"><button id="earlierBtn" class="mini-btn">Inicio −30</button><button id="laterBtn" class="mini-btn">Inicio +30</button><button id="shorterBtn" class="mini-btn">Duración −30</button><button id="longerBtn" class="mini-btn">Duración +30</button></div><button id="deleteSelectedBtn" class="mini-btn danger full">Eliminar selección</button></section>
       </aside>
     </div>
   </section>
@@ -153,271 +79,44 @@
   <section id="monthView" class="planner-view hidden">
     <div class="month-layout">
       <section class="card month-card">
-        <div class="month-toolbar">
-          <div class="month-nav">
-            <button id="prevMonthBtn" class="icon-btn compact" type="button" aria-label="Mes anterior">‹</button>
-            <div>
-              <h2 id="monthTitle">Mes</h2>
-              <button id="todayMonthBtn" class="text-btn month-today-btn" type="button">Ir a hoy</button>
-            </div>
-            <button id="nextMonthBtn" class="icon-btn compact" type="button" aria-label="Mes siguiente">›</button>
-          </div>
-
-          <div class="month-toolbar-actions">
-            <button id="monthIcsBtn" class="btn" type="button">Exportar .ics</button>
-            <button id="addMonthEventBtn" class="btn primary" type="button">+ Nuevo evento</button>
-          </div>
-        </div>
-
-        <div class="month-scroll">
-          <div id="monthWeekdayHead" class="month-weekdays"></div>
-          <div id="monthGrid" class="month-grid"></div>
-        </div>
+        <div class="month-toolbar"><div class="month-nav"><button id="prevMonthBtn" class="icon-btn">‹</button><div><h2 id="monthTitle">Mes</h2><button id="todayMonthBtn" class="text-btn">Ir a hoy</button></div><button id="nextMonthBtn" class="icon-btn">›</button></div><div class="month-toolbar-actions"><button id="monthIcsBtn" class="btn">Exportar .ics</button><button id="addMonthEventBtn" class="btn primary">+ Nuevo evento</button></div></div>
+        <div class="month-scroll"><div id="monthWeekdayHead" class="month-weekdays"></div><div id="monthGrid" class="month-grid"></div></div>
+        <section id="mobileDayAgenda" class="mobile-day-agenda card"><div class="mobile-agenda-head"><div><small>Día seleccionado</small><strong id="mobileAgendaTitle"></strong></div><button id="mobileAgendaAdd" class="btn primary">+ Añadir</button></div><div id="mobileAgendaList"></div></section>
       </section>
-
       <aside class="month-sidebar">
-        <section class="card side-card">
-          <div class="section-head"><strong>Próximos</strong><span>pendientes</span></div>
-          <div id="upcomingList" class="upcoming-list"></div>
-        </section>
-
-        <section class="card side-card filters-card">
-          <div class="section-head">
-            <strong>Filtros</strong>
-            <button id="resetMonthFiltersBtn" class="text-btn" type="button">Restablecer</button>
-          </div>
-
-          <label class="field">Curso
-            <select id="monthCourseFilter">
-              <option value="all">3.º + 4.º</option>
-              <option value="3">Solo 3.º</option>
-              <option value="4">Solo 4.º</option>
-            </select>
-          </label>
-
-          <label class="field">Asignatura
-            <select id="monthSubjectFilter">
-              <option value="all">Todas</option>
-            </select>
-          </label>
-
-          <label class="field">Tipo
-            <select id="monthTypeFilter">
-              <option value="all">Todos</option>
-            </select>
-          </label>
-
-          <label class="field">Estado
-            <select id="monthStatusFilter">
-              <option value="all">Todos</option>
-              <option value="pending">Pendientes</option>
-              <option value="done">Completados</option>
-            </select>
-          </label>
-
-          <div id="monthFilterSummary" class="filter-summary">0 eventos</div>
-        </section>
+        <section class="card side-card"><div class="section-head"><strong>Próximos</strong><span>pendientes</span></div><div id="upcomingList" class="upcoming-list"></div></section>
+        <section class="card side-card filters-card"><div class="section-head"><strong>Filtros</strong><button id="resetMonthFiltersBtn" class="text-btn">Restablecer</button></div><label class="field">Curso<select id="monthCourseFilter"><option value="all">3.º + 4.º</option><option value="3">Solo 3.º</option><option value="4">Solo 4.º</option></select></label><label class="field">Asignatura<select id="monthSubjectFilter"></select></label><label class="field">Tipo<select id="monthTypeFilter"></select></label><label class="field">Estado<select id="monthStatusFilter"><option value="all">Todos</option><option value="pending">Pendientes</option><option value="done">Completados</option></select></label><div id="monthFilterSummary" class="filter-summary"></div></section>
       </aside>
     </div>
   </section>
 
-  <div id="settingsBackdrop" class="settings-backdrop hidden" aria-hidden="true">
-    <aside class="settings-panel" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
-      <div class="settings-head">
-        <h2 id="settingsTitle">Ajustes</h2>
-        <button id="closeSettingsBtn" class="icon-btn" type="button" aria-label="Cerrar ajustes">×</button>
-      </div>
+  <section id="shopView" class="planner-view hidden game-view">
+    <div class="game-header"><div><span class="eyebrow">Personalización</span><h2 id="shopHeading">Tienda de skins</h2><p id="shopIntro"></p></div><div class="big-wallet">🪙 <strong data-wallet>0</strong></div></div>
+    <div id="skinGrid" class="skin-grid"></div>
+  </section>
 
-      <section class="settings-section">
-        <h3>Apariencia</h3>
-        <div class="theme-options">
-          <button class="theme-option" data-theme-choice="light" type="button">Claro</button>
-          <button class="theme-option" data-theme-choice="dark" type="button">Oscuro</button>
-          <button class="theme-option" data-theme-choice="system" type="button">Sistema</button>
-          <button class="theme-option rosita-theme-option hidden" data-theme-choice="rosita" type="button">Rosita</button>
-        </div>
-      </section>
-
-      <section class="settings-section">
-        <h3>Código</h3>
-        <p class="settings-note">Introduce un código para desbloquear extras.</p>
-        <form id="secretCodeForm" class="secret-code-form">
-          <input id="secretCodeInput" type="text" autocomplete="off" spellcheck="false" placeholder="Código">
-          <button class="settings-action" type="submit">Aplicar</button>
-        </form>
-      </section>
-
-      <section class="settings-section">
-        <h3>Horarios locales</h3>
-        <p class="settings-note">Cada horario guarda sus clases y su calendario mensual únicamente en este navegador.</p>
-        <div class="settings-actions-grid">
-          <button id="newScheduleBtn" class="settings-action" type="button">Nuevo horario</button>
-          <button id="renameScheduleBtn" class="settings-action" type="button">Renombrar</button>
-          <button id="deleteScheduleBtn" class="settings-action danger-soft" type="button">Eliminar</button>
-        </div>
-      </section>
-
-      <section class="settings-section">
-        <h3>Copia de seguridad</h3>
-        <p class="settings-note">El JSON incluye horario semanal, exámenes, entregas, trabajos y ajustes.</p>
-        <div class="settings-actions-grid">
-          <button id="backupScheduleBtn" class="settings-action" type="button">Exportar JSON</button>
-          <button id="importScheduleBtn" class="settings-action" type="button">Importar JSON</button>
-        </div>
-        <input id="importScheduleInput" class="hidden" type="file" accept=".json,application/json">
-      </section>
-
-      <section class="settings-section">
-        <h3>Instalación</h3>
-        <p class="settings-note">Al publicarse por HTTPS puede instalarse como una app y seguir funcionando sin conexión.</p>
-        <button id="installAppBtn" class="settings-action full-width hidden" type="button">Instalar aplicación</button>
-        <div id="installHelp" class="settings-note">Si el botón no aparece, usa el menú del navegador → “Instalar aplicación” o “Añadir a pantalla de inicio”.</div>
-      </section>
-
-      <section class="settings-section">
-        <h3>Documentación</h3>
-        <div class="docs">
-          <div class="doc-row"><strong>Semana.</strong> Arrastra asignaturas al horario, mueve y redimensiona bloques y usa clic derecho para LAB, marco, color, opacidad, duplicar o eliminar.</div>
-          <div class="doc-row"><strong>Mes.</strong> Haz clic en cualquier día o en “Nuevo evento” para añadir exámenes, entregas, trabajos, presentaciones o prácticas.</div>
-          <div class="doc-row"><strong>Mover fechas.</strong> Arrastra un evento mensual a otro día para cambiar su fecha.</div>
-          <div class="doc-row"><strong>Próximos.</strong> La columna lateral muestra los eventos pendientes más cercanos.</div>
-          <div class="doc-row"><strong>Calendario externo.</strong> “Exportar .ics” permite importar los eventos en Google Calendar, Apple Calendar u Outlook.</div>
-        </div>
-      </section>
-    </aside>
-  </div>
-
-  <div id="eventModalBackdrop" class="event-modal-backdrop hidden" aria-hidden="true">
-    <section class="event-modal" role="dialog" aria-modal="true" aria-labelledby="eventModalTitle">
-      <div class="settings-head event-modal-head">
-        <div>
-          <span class="eyebrow">Calendario</span>
-          <h2 id="eventModalTitle">Nuevo evento</h2>
-        </div>
-        <button id="closeEventModalBtn" class="icon-btn" type="button" aria-label="Cerrar">×</button>
-      </div>
-
-      <form id="eventForm">
-        <input id="eventId" type="hidden">
-
-        <div class="event-form-grid">
-          <label class="form-field span-2">Título
-            <input id="eventTitle" type="text" maxlength="120" placeholder="Ej. Parcial tema 1–5">
-          </label>
-
-          <label class="form-field">Asignatura
-            <select id="eventSubject"></select>
-          </label>
-
-          <label class="form-field">Tipo
-            <select id="eventType"></select>
-          </label>
-
-          <label class="form-field">Fecha
-            <input id="eventDate" type="date" required>
-          </label>
-
-          <label class="form-field">Lugar
-            <input id="eventLocation" type="text" maxlength="120" placeholder="Aula, edificio…">
-          </label>
-
-          <label class="form-field">Inicio
-            <input id="eventStart" type="time">
-          </label>
-
-          <label class="form-field">Fin
-            <input id="eventEnd" type="time">
-          </label>
-
-          <label class="form-field span-2">Notas
-            <textarea id="eventNotes" rows="4" maxlength="1200" placeholder="Temario, requisitos, enlace, cosas que llevar…"></textarea>
-          </label>
-        </div>
-
-        <label class="complete-toggle">
-          <input id="eventCompleted" type="checkbox">
-          <span>Marcar como completado / entregado</span>
-        </label>
-
-        <div class="event-form-actions">
-          <button id="deleteMonthEventBtn" class="btn danger-btn hidden" type="button">Eliminar</button>
-          <span class="form-spacer"></span>
-          <button id="cancelEventBtn" class="btn" type="button">Cancelar</button>
-          <button class="btn primary" type="submit">Guardar</button>
-        </div>
-      </form>
-    </section>
-  </div>
-
-  <div id="status" class="toast hidden" aria-live="polite"></div>
-
-  <div id="contextMenu" class="context-menu hidden" role="menu" aria-label="Acciones del bloque">
-    <div id="contextTitle" class="context-title"></div>
-
-    <button id="toggleLabBtn" class="menu-item" type="button" role="menuitemcheckbox" aria-checked="false">
-      <span class="menu-icon lab-icon">LAB</span>
-      <span>Marcar como LAB</span>
-      <span class="check">✓</span>
-    </button>
-
-    <button id="toggleFrameBtn" class="menu-item" type="button" role="menuitemcheckbox" aria-checked="false">
-      <span class="menu-icon frame-icon"></span>
-      <span>Mostrar marco</span>
-      <span class="check">✓</span>
-    </button>
-
-    <label class="menu-field">
-      <span>Color del marco</span>
-      <input id="frameColorInput" type="color" value="#dc2626">
-    </label>
-
-    <label class="menu-field opacity-field">
-      <span>Opacidad <strong id="opacityValue">100%</strong></span>
-      <input id="opacityInput" type="range" min="20" max="100" step="5" value="100">
-    </label>
-
-    <div class="menu-separator"></div>
-
-    <button id="duplicateBtn" class="menu-item" type="button">
-      <span class="menu-symbol">⧉</span>
-      <span>Duplicar</span>
-    </button>
-
-    <button id="deleteBtn" class="menu-item danger" type="button">
-      <span class="menu-symbol">×</span>
-      <span>Eliminar</span>
-    </button>
-  </div>
-
-  <div id="duplicateCursor" class="duplicate-cursor hidden">
-    Duplicando · clic para colocar · Esc cancelar
-  </div>
+  <section id="missionsView" class="planner-view hidden game-view">
+    <div class="game-header"><div><span class="eyebrow">Cultura general</span><h2 id="missionsHeading">Misiones del día</h2><p id="missionsIntro"></p></div><div class="big-wallet">🪙 <strong data-wallet>0</strong></div></div>
+    <div id="missionSummary" class="mission-summary"></div><div id="missionList" class="mission-list"></div>
+  </section>
 </main>
 
-<nav id="mobileBottomNav" class="mobile-bottom-nav" aria-label="Navegación principal">
-  <button type="button" class="mobile-nav-btn" data-mobile-nav="week">
-    <span class="mobile-nav-icon">▦</span><span>Semana</span>
-  </button>
-  <button type="button" class="mobile-nav-btn" data-mobile-nav="month">
-    <span class="mobile-nav-icon">□</span><span>Mes</span>
-  </button>
-  <button type="button" class="mobile-nav-btn mobile-nav-add" data-mobile-nav="add">
-    <span class="mobile-nav-plus">+</span><span>Añadir</span>
-  </button>
-  <button type="button" class="mobile-nav-btn" data-mobile-nav="settings">
-    <span class="mobile-nav-icon">⚙</span><span>Ajustes</span>
-  </button>
-</nav>
+<div id="contextMenu" class="context-menu hidden"><button data-action="lab">Alternar LAB</button><div class="menu-sep"></div><button data-action="frame-red">Marco rojo</button><button data-action="frame-yellow">Marco amarillo</button><button data-action="frame-blue">Marco azul</button><button data-action="frame-none">Sin marco</button><div class="menu-sep"></div><button data-action="opacity">Alternar opacidad</button><button data-action="duplicate">Duplicar</button><button class="danger-text" data-action="delete">Eliminar</button></div>
 
-<div id="mobileSheetBackdrop" class="mobile-sheet-backdrop hidden" aria-hidden="true">
-  <section class="mobile-sheet" role="dialog" aria-modal="true" aria-labelledby="mobileSheetTitle">
-    <div class="mobile-sheet-handle"></div>
-    <div class="mobile-sheet-head">
-      <h2 id="mobileSheetTitle">Añadir asignatura</h2>
-      <button id="closeMobileSheet" class="icon-btn" type="button" aria-label="Cerrar">×</button>
-    </div>
-    <div id="mobileSheetContent" class="mobile-sheet-content"></div>
-  </section>
-</div>
+<div id="settingsBackdrop" class="modal-backdrop hidden" aria-hidden="true"><aside class="settings-panel"><div class="modal-head"><h2 id="settingsTitle">Ajustes</h2><button id="closeSettingsBtn" class="icon-btn">×</button></div>
+  <section class="settings-section"><h3>Apariencia</h3><div class="theme-options"><button data-theme-choice="light">Claro</button><button data-theme-choice="dark">Oscuro</button><button data-theme-choice="system">Sistema</button><button data-theme-choice="rosita" class="hidden">Rosita</button></div></section>
+  <section class="settings-section"><h3>Código</h3><p>Introduce un código para desbloquear extras o activar funciones de debug.</p><form id="secretCodeForm" class="secret-code-form"><input id="secretCodeInput" autocomplete="off" placeholder="Código"><button>Aplicar</button></form></section>
+  <section class="settings-section"><h3>Horarios locales</h3><div class="settings-grid"><button id="newScheduleBtn">Nuevo horario</button><button id="renameScheduleBtn">Renombrar</button><button id="deleteScheduleBtn" class="danger-soft">Eliminar</button></div></section>
+  <section class="settings-section"><h3>Copia de seguridad</h3><p>Incluye horario semanal, calendario mensual y ajustes principales.</p><div class="settings-grid"><button id="backupScheduleBtn">Exportar JSON</button><button id="importScheduleBtn">Importar JSON</button></div><input id="importScheduleInput" class="hidden" type="file" accept=".json,application/json"></section>
+  <section class="settings-section"><h3>Instalación</h3><button id="installAppBtn" class="hidden">Instalar aplicación</button><p>También puedes usar “Añadir a pantalla de inicio” desde el navegador.</p></section>
+  <section class="settings-section"><h3>Documentación</h3><div class="docs"><p><b>Semana:</b> arrastra asignaturas, mueve y redimensiona bloques. Clic derecho para LAB, marco, opacidad, duplicado y borrado.</p><p><b>Mes:</b> añade exámenes, entregas, trabajos, presentaciones o prácticas y arrástralos entre días.</p><p><b>Móvil:</b> la edición empieza bloqueada. Actívala con el candado para evitar cambios accidentales.</p><p><b>Tienda y misiones:</b> responde retos diarios, gana monedas y compra skins.</p></div></section>
+</aside></div>
+
+<div id="eventModalBackdrop" class="modal-backdrop hidden" aria-hidden="true"><section class="event-modal"><div class="modal-head"><div><span class="eyebrow">Calendario</span><h2 id="eventModalTitle">Nuevo evento</h2></div><button id="closeEventModalBtn" class="icon-btn">×</button></div><form id="eventForm"><input id="eventId" type="hidden"><div class="event-form-grid"><label class="span-2">Título<input id="eventTitle" maxlength="120"></label><label>Asignatura<select id="eventSubject"></select></label><label>Tipo<select id="eventType"></select></label><label>Fecha<input id="eventDate" type="date" required></label><label>Lugar<input id="eventLocation" maxlength="120"></label><label>Inicio<input id="eventStart" type="time"></label><label>Fin<input id="eventEnd" type="time"></label><label class="span-2">Notas<textarea id="eventNotes" rows="4"></textarea></label><label class="check-row span-2"><input id="eventCompleted" type="checkbox"> Completado</label></div><div class="modal-actions"><button id="deleteEventBtn" class="btn danger hidden" type="button">Eliminar</button><span></span><button id="cancelEventBtn" class="btn" type="button">Cancelar</button><button class="btn primary" type="submit">Guardar</button></div></form></section></div>
+
+<div id="subjectPaletteSheet" class="subject-palette-sheet"><div class="sheet-handle"></div><p>Selecciona una asignatura y toca el horario para añadirla.</p><button type="button" onclick="this.parentElement.classList.remove('open')">Cerrar</button></div>
+
+<nav class="mobile-bottom-nav"><button data-mobile-view="week"><span>▦</span><small>Semana</small></button><button data-mobile-view="month"><span>□</span><small>Mes</small></button><button id="mobileAddBtn" class="mobile-add"><span>＋</span><small>Añadir</small></button><button id="mobileSettingsBtn"><span>⚙</span><small>Ajustes</small></button></nav>
+<div id="toast" class="toast" role="status"></div>
 </body>
 </html>

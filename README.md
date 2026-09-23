@@ -1,75 +1,30 @@
-# Planificador semanal
+# Planificador universitario
 
-Web estática y PWA. No necesita backend, base de datos, cuentas de usuario ni servidor propio.
+PWA estática y local-first para organizar horario semanal, calendario mensual, misiones y skins.
 
-## Uso local
+## Arquitectura v20
 
-Puedes abrir `index.html` directamente en el navegador. La mayor parte de la app funcionará así.
+La aplicación se reescribió para eliminar parches e inyecciones dinámicas. El HTML carga un único punto de entrada ES Module (`src/main.js`) y cada responsabilidad vive en su propio módulo:
 
-Para probar la instalación PWA y el modo offline necesitas servirla por `http://localhost` o publicarla por HTTPS.
+- `src/config.js`: asignaturas, horario base, skins y preguntas.
+- `src/storage.js`: persistencia, migración y copias de seguridad.
+- `src/ui.js`: temas, skins, textos y utilidades de interfaz.
+- `src/weekly.js`: horario semanal, edición, filtros y exportación.
+- `src/month.js`: calendario mensual, eventos e ICS.
+- `src/game.js`: monedas, tienda, skins y misiones.
+- `src/main.js`: arranque, navegación, ajustes y PWA.
+- `styles.css` + `src/mobile.css`: estilos base y adaptación móvil.
 
-### Servidor local opcional
+No hay backend, cuentas ni base de datos. Los datos siguen guardándose en `localStorage`, conservando las claves usadas por versiones anteriores.
 
-Con Python:
+## PWA
+
+`service-worker.js` usa una caché simple con prioridad de red para evitar quedarse atascado en versiones antiguas. No modifica JavaScript ni inyecta módulos en tiempo de ejecución.
+
+## Desarrollo local
 
 ```bash
 python -m http.server 8080
 ```
 
-Después abre:
-
-```text
-http://localhost:8080
-```
-
-## Datos
-
-Todo se guarda en `localStorage` del navegador.
-
-- Cada dispositivo tiene sus propios horarios.
-- No se envía ningún horario a ningún servidor.
-- Puedes crear varios horarios locales.
-- Desde Ajustes puedes exportar/importar un horario como JSON.
-
-## Publicarla
-
-El proyecto es completamente estático. Puedes subir esta carpeta tal cual a:
-
-- GitHub Pages
-- Cloudflare Pages
-- Netlify
-- Vercel
-- cualquier hosting estático
-
-No hace falta configurar API, base de datos ni variables de entorno.
-
-### GitHub Pages
-
-1. Crea un repositorio.
-2. Sube todos los archivos de esta carpeta.
-3. En GitHub: Settings → Pages.
-4. Selecciona `Deploy from a branch`.
-5. Elige la rama `main` y la carpeta `/root`.
-6. Guarda.
-
-La URL final tendrá HTTPS, por lo que la PWA podrá instalarse y funcionar offline.
-
-## Instalación como app
-
-Una vez publicada por HTTPS:
-
-- Chrome / Edge en PC: icono de instalar en la barra de direcciones.
-- Android: menú → Instalar aplicación / Añadir a pantalla de inicio.
-- iPhone/iPad: Compartir → Añadir a pantalla de inicio.
-
-## Estructura
-
-```text
-index.html
-styles.css
-app.js
-manifest.webmanifest
-service-worker.js
-icons/
-  icon.svg
-```
+Abre `http://localhost:8080`.
