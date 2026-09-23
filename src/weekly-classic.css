@@ -1,0 +1,14 @@
+.week-drop-preview{position:absolute;left:3px;right:3px;z-index:7;border-radius:8px;background:color-mix(in srgb,var(--preview-subject) 30%,transparent);border:2px dashed color-mix(in srgb,var(--preview-subject) 86%,white);pointer-events:none;box-shadow:inset 0 0 0 1px rgba(255,255,255,.45)}
+.week-drop-preview.duplicate{background:color-mix(in srgb,var(--preview-subject) 18%,transparent);border-style:dashed}
+.calendar.duplicate-mode,.calendar.duplicate-mode .day-column{cursor:copy}
+.week-event.pop{animation:weekEventPop .22s cubic-bezier(.2,.9,.3,1.25)}
+@keyframes weekEventPop{0%{transform:scale(.86);opacity:.35}70%{transform:scale(1.035)}100%{transform:scale(1)}}
+body.weekly-dragging{user-select:none;cursor:grabbing}
+body.weekly-dragging .week-event.selected{filter:saturate(1.08);box-shadow:0 8px 20px rgba(0,0,0,.18)}
+.frame-color-filter{display:flex;align-items:center;gap:7px;margin:8px 0 2px}
+.frame-swatch{width:28px;height:28px;padding:4px;border:1px solid var(--border);border-radius:8px;background:var(--panel);display:grid;place-items:center}
+.frame-swatch.active{outline:2px solid var(--accent);outline-offset:1px}
+.frame-swatch i{display:block;width:14px;height:14px;border-radius:50%;border:2px solid var(--border);background:transparent}
+.frame-swatch i.red{background:#ef4444;border-color:#ef4444}.frame-swatch i.yellow{background:#facc15;border-color:#facc15}.frame-swatch i.blue{background:#3b82f6;border-color:#3b82f6}
+.week-event small{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+@media(max-width:700px){.week-drop-preview{left:2px;right:2px}.week-event .resize-handle{height:12px}.calendar.duplicate-mode{touch-action:none}}
