@@ -31,10 +31,16 @@ jobs:
           import re, sys
           for p in Path('src').glob('*.js'):
               for rel in re.findall(r"from\s+['\"](\./[^'\"]+)['\"]", p.read_text()):
-                  if not (p.parent/rel).resolve().exists():
+                  target=(p.parent/rel.split('?')[0]).resolve()
+                  if not target.exists():
                       print('Missing import',p,rel); sys.exit(1)
           print('Validation OK')
           PY
+      - name: Stamp release v21
+        run: |
+          sed -i 's/styles.css?v=20/styles.css?v=21/g; s/main.js?v=20/main.js?v=21/g; s/>v20</>v21</g' index.html
+          sed -i 's/mobile.css?v=20/mobile.css?v=21/g' src/main.js
+          sed -i "s/planificador-v21/planificador-v22/g; s/styles.css?v=20/styles.css?v=21/g; s/mobile.css?v=20/mobile.css?v=21/g; s/main.js?v=20/main.js?v=21/g" service-worker.js
       - name: Setup Pages
         uses: actions/configure-pages@v5
         with:
