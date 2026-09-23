@@ -1,0 +1,40 @@
+name: Validate refactor
+
+on:
+  push:
+    branches: ["refactor-v20"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check JavaScript syntax
+        run: |
+          for f in src/*.js service-worker.js; do
+            echo "Checking $f"
+            node --check "$f"
+          done
+      - name: Check module references
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re, sys
+          bad=[]
+          for p in Path('src').glob('*.js'):
+              text=p.read_text()
+              for rel in re.findall(r"from\s+['\"](\./[^'\"]+)['\"]", text):
+                  target=(p.parent/rel).resolve()
+                  if not target.exists(): bad.append((str(p),rel))
+          if bad:
+              print('Missing imports:',bad); sys.exit(1)
+          html=Path('index.html').read_text()
+          for required in ['weekView','monthView','shopView','missionsView','scheduleSelect','calendar','monthGrid','skinGrid','missionList','settingsBackdrop','eventModalBackdrop']:
+              if f'id="{required}"' not in html:
+                  print('Missing HTML id',required); sys.exit(1)
+          print('Static checks OK')
+          PY
