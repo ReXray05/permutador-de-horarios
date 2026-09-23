@@ -1,4 +1,4 @@
-const CACHE_NAME = 'planificador-semanal-v18';
+const CACHE_NAME = 'planificador-semanal-v19';
 const APP_SHELL = [
   './',
   './index.html',
@@ -6,9 +6,9 @@ const APP_SHELL = [
   './app.js?v=13',
   './month.js?v=13',
   './mobile.js?v=13',
-  './game.js?v=18',
-  './game-fixes.js?v=18',
-  './game-extra2.js?v=18',
+  './game.js?v=19',
+  './game-fixes.js?v=19',
+  './game-extra2.js?v=19',
   './manifest.webmanifest',
   './icons/icon.svg'
 ];
@@ -31,25 +31,26 @@ self.addEventListener('activate', event => {
   );
 });
 
-async function injectGameLoader(response) {
+self.addEventListener('message', event => {
+  if (event.data === 'SKIP_WAITING') self.skipWaiting();
+});
+
+async function injectGameScripts(response) {
   if (!response) return response;
-  const text = await response.text();
-  const marker = 'planner-game-loader-v18';
-  if (text.includes(marker)) {
-    return new Response(text, {
-      status: response.status,
-      statusText: response.statusText,
-      headers: response.headers
-    });
+  const type = response.headers.get('content-type') || '';
+  if (!type.includes('text/html')) return response;
+
+  let html = await response.text();
+  const marker = 'planner-game-direct-v19';
+  if (!html.includes(marker)) {
+    const scripts = `\n  <!-- ${marker} -->\n  <script defer src="./game.js?v=19"></script>\n  <script defer src="./game-fixes.js?v=19"></script>\n  <script defer src="./game-extra2.js?v=19"></script>\n`;
+    html = html.includes('</head>') ? html.replace('</head>', scripts + '</head>') : html + scripts;
   }
 
-  const injected = text + `\n;/* ${marker} */(() => {\n  if (document.getElementById('plannerGameScript')) return;\n  const game = document.createElement('script');\n  game.id = 'plannerGameScript';\n  game.src = './game.js?v=18';\n  game.onload = () => {\n    const fixes = document.createElement('script');\n    fixes.id = 'plannerGameFixesScript';\n    fixes.src = './game-fixes.js?v=18';\n    fixes.onload = () => {\n      const extra = document.createElement('script');\n      extra.id = 'plannerGameExtraScript';\n      extra.src = './game-extra2.js?v=18';\n      document.head.appendChild(extra);\n    };\n    document.head.appendChild(fixes);\n  };\n  document.head.appendChild(game);\n})();\n`;
-
   const headers = new Headers(response.headers);
-  headers.set('content-type','application/javascript; charset=utf-8');
+  headers.set('content-type','text/html; charset=utf-8');
   headers.delete('content-length');
-
-  return new Response(injected, {
+  return new Response(html, {
     status: response.status,
     statusText: response.statusText,
     headers
@@ -61,12 +62,12 @@ self.addEventListener('fetch', event => {
 
   const url = new URL(event.request.url);
   if (url.origin !== self.location.origin) return;
-  const isMobileScript = url.pathname.endsWith('/mobile.js');
+  const isNavigation = event.request.mode === 'navigate';
 
   event.respondWith((async () => {
     try {
-      let response = await fetch(event.request);
-      if (isMobileScript && response.ok) response = await injectGameLoader(response);
+      let response = await fetch(event.request, {cache:'no-store'});
+      if (isNavigation && response.ok) response = await injectGameScripts(response);
 
       if (response && response.status === 200) {
         caches.open(CACHE_NAME).then(cache => cache.put(event.request,response.clone()));
@@ -74,9 +75,9 @@ self.addEventListener('fetch', event => {
       return response;
     } catch {
       let cached = await caches.match(event.request);
-      if (cached && isMobileScript) cached = await injectGameLoader(cached);
+      if (!cached && isNavigation) cached = await caches.match('./index.html');
+      if (cached && isNavigation) cached = await injectGameScripts(cached);
       if (cached) return cached;
-      if (event.request.mode === 'navigate') return caches.match('./index.html');
       throw new Error('offline');
     }
   })());
