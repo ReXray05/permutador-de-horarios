@@ -3,6 +3,7 @@
 
   const DAY_KEY = 'planner-mobile-day-v1';
   const VIEW_KEY = 'planner-active-view-v1';
+  const MOBILE_QUERY = '(max-width: 700px)';
 
   const $ = sel => document.querySelector(sel);
   const $$ = sel => [...document.querySelectorAll(sel)];
@@ -12,39 +13,49 @@
   let editUnlocked = false;
 
   function isMobile() {
-    return window.matchMedia('(max-width: 700px)').matches;
+    return window.matchMedia(MOBILE_QUERY).matches;
   }
 
   function currentView() {
-    return $('#monthView')?.classList.contains('hidden') ? 'week' : 'month';
+    if ($('#shopView') && !$('#shopView').classList.contains('hidden')) return 'shop';
+    if ($('#missionsView') && !$('#missionsView').classList.contains('hidden')) return 'missions';
+    if ($('#monthView') && !$('#monthView').classList.contains('hidden')) return 'month';
+    return 'week';
   }
 
-  function createMobileUI() {
+  function notify(message) {
+    const node = $('#status');
+    if (!node) return;
+    node.textContent = message;
+    node.classList.remove('hidden');
+    clearTimeout(notify.timer);
+    notify.timer = setTimeout(() => node.classList.add('hidden'),1800);
+  }
+
+  function ensureMobileUI() {
     if (!$('#mobileEditToggle')) {
-      const editToggle = document.createElement('button');
-      editToggle.id = 'mobileEditToggle';
-      editToggle.className = 'mobile-edit-toggle';
-      editToggle.type = 'button';
-      editToggle.setAttribute('aria-pressed','false');
-      editToggle.innerHTML = '<span class="mobile-edit-icon">🔒</span><span class="mobile-edit-label">Bloqueado</span>';
-      $('.schedule-switcher')?.insertAdjacentElement('afterend',editToggle);
+      const button = document.createElement('button');
+      button.id = 'mobileEditToggle';
+      button.className = 'mobile-edit-toggle';
+      button.type = 'button';
+      button.setAttribute('aria-pressed','false');
+      button.innerHTML = '<span class="mobile-edit-icon">🔒</span><span class="mobile-edit-label">Bloqueado</span>';
+      $('.schedule-switcher')?.insertAdjacentElement('afterend',button);
     }
 
     if (!$('#mobileWeekTools')) {
-      const weekTools = document.createElement('div');
-      weekTools.id = 'mobileWeekTools';
-      weekTools.className = 'mobile-week-tools';
-      weekTools.innerHTML =
+      const tools = document.createElement('div');
+      tools.id = 'mobileWeekTools';
+      tools.className = 'mobile-week-tools';
+      tools.innerHTML =
         '<div class="mobile-day-tabs" role="tablist" aria-label="Día de la semana">' +
-        ['L','M','X','J','V'].map((day,index) =>
-          '<button type="button" class="mobile-day-tab" data-mobile-day="' + index +
-          '" aria-label="' + ['Lunes','Martes','Miércoles','Jueves','Viernes'][index] + '">' + day + '</button>'
+        ['L','M','X','J','V'].map((label,index) =>
+          '<button type="button" class="mobile-day-tab" data-mobile-day="' + index + '" aria-label="' +
+          ['Lunes','Martes','Miércoles','Jueves','Viernes'][index] + '">' + label + '</button>'
         ).join('') +
         '</div>' +
         '<button id="mobileFiltersBtn" class="mobile-tool-btn" type="button">Filtros</button>';
-
-      const calendarCard = $('.calendar-card');
-      calendarCard?.parentElement?.insertBefore(weekTools, calendarCard);
+      $('.calendar-card')?.parentElement?.insertBefore(tools,$('.calendar-card'));
     }
 
     if (!$('#mobileDayAgenda')) {
@@ -74,54 +85,110 @@
     }
 
     if (!$('#mobileSheetBackdrop')) {
-      const sheet = document.createElement('div');
-      sheet.id = 'mobileSheetBackdrop';
-      sheet.className = 'mobile-sheet-backdrop hidden';
-      sheet.innerHTML =
+      const backdrop = document.createElement('div');
+      backdrop.id = 'mobileSheetBackdrop';
+      backdrop.className = 'mobile-sheet-backdrop hidden';
+      backdrop.setAttribute('aria-hidden','true');
+      backdrop.innerHTML =
         '<section class="mobile-sheet" role="dialog" aria-modal="true" aria-labelledby="mobileSheetTitle">' +
           '<div class="mobile-sheet-handle"></div>' +
           '<div class="mobile-sheet-head">' +
-            '<h2 id="mobileSheetTitle">Añadir asignatura</h2>' +
+            '<h2 id="mobileSheetTitle">Panel</h2>' +
             '<button id="closeMobileSheet" class="icon-btn" type="button" aria-label="Cerrar">×</button>' +
           '</div>' +
           '<div id="mobileSheetContent" class="mobile-sheet-content"></div>' +
         '</section>';
-      document.body.appendChild(sheet);
+      document.body.appendChild(backdrop);
     }
-
-    bindMobileUI();
   }
 
-  function notify(message) {
-    const node = $('#status');
+  function initialMobileDay() {
+    const saved = Number(localStorage.getItem(DAY_KEY));
+    if (Number.isInteger(saved) && saved >= 0 && saved <= 4) return saved;
+    const today = new Date().getDay() - 1;
+    return today >= 0 && today <= 4 ? today : 0;
+  }
+
+  function setMobileDay(day) {
+    const normalized = Math.max(0,Math.min(4,Number(day) || 0));
+    localStorage.setItem(DAY_KEY,String(normalized));
+
+    $('#calendar')?.classList.add('mobile-single-day');
+
+    $$('.day-head').forEach((node,index) => {
+      node.classList.toggle('mobile-active',index === normalized);
+      node.dataset.mobileDay = index;
+    });
+
+    $$('.day-column').forEach((node,index) => {
+      node.classList.toggle('mobile-active',index === normalized);
+    });
+
+    $$('.mobile-day-tab').forEach(button => {
+      const active = Number(button.dataset.mobileDay) === normalized;
+      button.classList.toggle('active',active);
+      button.setAttribute('aria-selected',String(active));
+    });
+  }
+
+  function openSheet(node,title) {
     if (!node) return;
-    node.textContent = message;
-    node.classList.remove('hidden');
-    clearTimeout(notify.timer);
-    notify.timer = setTimeout(() => node.classList.add('hidden'), 1800);
+    closeSheet();
+
+    const backdrop = $('#mobileSheetBackdrop');
+    const content = $('#mobileSheetContent');
+    if (!backdrop || !content) return;
+
+    const placeholder = document.createComment('mobile-sheet-placeholder');
+    node.parentNode?.insertBefore(placeholder,node);
+    content.appendChild(node);
+
+    sheetRestore = () => {
+      if (placeholder.parentNode) placeholder.parentNode.insertBefore(node,placeholder);
+      placeholder.remove();
+    };
+
+    $('#mobileSheetTitle').textContent = title;
+    backdrop.classList.remove('hidden');
+    backdrop.setAttribute('aria-hidden','false');
+    document.body.classList.add('mobile-sheet-open');
+  }
+
+  function closeSheet() {
+    const backdrop = $('#mobileSheetBackdrop');
+    if (!backdrop) return;
+
+    if (sheetRestore) {
+      sheetRestore();
+      sheetRestore = null;
+    }
+
+    backdrop.classList.add('hidden');
+    backdrop.setAttribute('aria-hidden','true');
+    document.body.classList.remove('mobile-sheet-open');
   }
 
   function syncEditLockUI() {
     const button = $('#mobileEditToggle');
-    if (!button) return;
-
-    button.setAttribute('aria-pressed',String(editUnlocked));
-    button.classList.toggle('is-unlocked',editUnlocked);
-    button.querySelector('.mobile-edit-icon').textContent = editUnlocked ? '🔓' : '🔒';
-    button.querySelector('.mobile-edit-label').textContent = editUnlocked ? 'Editando' : 'Bloqueado';
+    if (button) {
+      button.setAttribute('aria-pressed',String(editUnlocked));
+      button.classList.toggle('is-unlocked',editUnlocked);
+      const icon = button.querySelector('.mobile-edit-icon');
+      const label = button.querySelector('.mobile-edit-label');
+      if (icon) icon.textContent = editUnlocked ? '🔓' : '🔒';
+      if (label) label.textContent = editUnlocked ? 'Editando' : 'Bloqueado';
+    }
 
     document.body.classList.toggle('mobile-edit-unlocked',editUnlocked);
     document.body.classList.toggle('mobile-edit-locked',!editUnlocked);
 
-    const addNav = $('[data-mobile-nav="add"]');
-    if (addNav) {
-      addNav.toggleAttribute('disabled',!editUnlocked);
-      addNav.setAttribute('aria-disabled',String(!editUnlocked));
-    }
+    const controls = [
+      '[data-mobile-nav="add"]',
+      '#mobileAgendaAdd',
+      '#earlierBtn','#laterBtn','#shorterBtn','#longerBtn','#deleteSelectedBtn'
+    ];
 
-    $('#mobileAgendaAdd')?.toggleAttribute('disabled',!editUnlocked);
-
-    ['#earlierBtn','#laterBtn','#shorterBtn','#longerBtn','#deleteSelectedBtn'].forEach(selector => {
+    controls.forEach(selector => {
       const control = $(selector);
       if (!control) return;
       control.toggleAttribute('disabled',!editUnlocked);
@@ -132,7 +199,9 @@
 
     if (!editUnlocked) {
       closeSheet();
-      $('#cancelEventBtn')?.click();
+      if ($('#eventModalBackdrop') && !$('#eventModalBackdrop').classList.contains('hidden')) {
+        $('#cancelEventBtn')?.click();
+      }
     }
   }
 
@@ -142,100 +211,22 @@
     notify(editUnlocked ? 'Edición activada.' : 'Edición bloqueada.');
   }
 
-  function setMobileDay(day) {
-    const normalized = Math.max(0,Math.min(4,Number(day) || 0));
-    localStorage.setItem(DAY_KEY,String(normalized));
-
-    const calendar = $('#calendar');
-    calendar?.classList.add('mobile-single-day');
-
-    $$('.day-head').forEach((head,index) => {
-      head.classList.toggle('mobile-active',index === normalized);
-      head.dataset.mobileDay = index;
-    });
-
-    $$('.day-column').forEach((column,index) => {
-      column.classList.toggle('mobile-active',index === normalized);
-    });
-
-    $$$('.mobile-day-tab').forEach(button => {
-      const active = Number(button.dataset.mobileDay) === normalized;
-      button.classList.toggle('active',active);
-      button.setAttribute('aria-selected',String(active));
-    });
-  }
-
-  function initialMobileDay() {
-    const saved = Number(localStorage.getItem(DAY_KEY));
-    if (Number.isInteger(saved) && saved >= 0 && saved <= 4) return saved;
-    const weekday = new Date().getDay() - 1;
-    return weekday >= 0 && weekday <= 4 ? weekday : 0;
-  }
-
-  function openSheet(node,title) {
-    if (!node) return;
-    closeSheet();
-
-    const backdrop = $('#mobileSheetBackdrop');
-    const content = $('#mobileSheetContent');
-    const titleNode = $('#mobileSheetTitle');
-
-    const placeholder = document.createComment('mobile-sheet-placeholder');
-    node.parentNode.insertBefore(placeholder,node);
-    content.appendChild(node);
-
-    sheetRestore = () => {
-      placeholder.parentNode?.insertBefore(node,placeholder);
-      placeholder.remove();
-    };
-
-    titleNode.textContent = title;
-    backdrop.classList.remove('hidden');
-    document.body.classList.add('mobile-sheet-open');
-  }
-
-  function closeSheet() {
-    const backdrop = $('#mobileSheetBackdrop');
-    if (!backdrop || backdrop.classList.contains('hidden')) return;
-
-    if (sheetRestore) {
-      sheetRestore();
-      sheetRestore = null;
-    }
-
-    backdrop.classList.add('hidden');
-    document.body.classList.remove('mobile-sheet-open');
-  }
-
-  function syncBottomNav() {
-    const view = currentView();
-    $$('.mobile-nav-btn').forEach(btn => {
-      const key = btn.dataset.mobileNav;
-      btn.classList.toggle('active',key === view);
-    });
-  }
-
   function closeTransientPanels() {
     closeSheet();
 
-    const eventBackdrop = $('#eventModalBackdrop');
-    if (eventBackdrop && !eventBackdrop.classList.contains('hidden')) {
+    if ($('#eventModalBackdrop') && !$('#eventModalBackdrop').classList.contains('hidden')) {
       $('#cancelEventBtn')?.click();
-      eventBackdrop.classList.add('hidden');
-      eventBackdrop.setAttribute('aria-hidden','true');
     }
 
-    const settingsBackdrop = $('#settingsBackdrop');
-    if (settingsBackdrop && !settingsBackdrop.classList.contains('hidden')) {
+    if ($('#settingsBackdrop') && !$('#settingsBackdrop').classList.contains('hidden')) {
       $('#closeSettingsBtn')?.click();
-      settingsBackdrop.classList.add('hidden');
-      settingsBackdrop.setAttribute('aria-hidden','true');
     }
   }
 
-  function forceView(view) {
+  function forceBaseView(view) {
     const normalized = view === 'month' ? 'month' : 'week';
-
+    $('#shopView')?.classList.add('hidden');
+    $('#missionsView')?.classList.add('hidden');
     $('#weekView')?.classList.toggle('hidden',normalized !== 'week');
     $('#monthView')?.classList.toggle('hidden',normalized !== 'month');
 
@@ -252,149 +243,106 @@
     localStorage.setItem(VIEW_KEY,normalized);
   }
 
-  function switchView(view) {
+  function switchBaseView(view) {
     const normalized = view === 'month' ? 'month' : 'week';
     closeTransientPanels();
-
     const tab = $('.view-tab[data-view="' + normalized + '"]');
     tab?.click();
 
     requestAnimationFrame(() => {
-      const target = normalized === 'week' ? $('#weekView') : $('#monthView');
-      if (!target || target.classList.contains('hidden')) {
-        forceView(normalized);
-      }
-
+      forceBaseView(normalized);
       syncBottomNav();
       window.scrollTo({top:0,behavior:'smooth'});
     });
   }
 
+  function syncBottomNav() {
+    const view = currentView();
+    $$('.mobile-nav-btn').forEach(button => {
+      const key = button.dataset.mobileNav;
+      button.classList.toggle('active',key === view && (key === 'week' || key === 'month'));
+    });
+  }
+
+  function todayISO() {
+    const now = new Date();
+    const pad = n => String(n).padStart(2,'0');
+    return now.getFullYear() + '-' + pad(now.getMonth()+1) + '-' + pad(now.getDate());
+  }
+
   function currentSelectedMonthDate() {
-    if (selectedMonthDate && $('.month-day[data-date="' + selectedMonthDate + '"]')) {
-      return selectedMonthDate;
-    }
-
-    const today = new Date();
-    const iso = [
-      today.getFullYear(),
-      String(today.getMonth()+1).padStart(2,'0'),
-      String(today.getDate()).padStart(2,'0')
-    ].join('-');
-
-    if ($('.month-day[data-date="' + iso + '"]')) return iso;
-
-    return $('.month-day:not(.outside-month)')?.dataset.date ||
-           $('.month-day[data-date]')?.dataset.date ||
-           iso;
+    if (selectedMonthDate && $('.month-day[data-date="' + selectedMonthDate + '"]')) return selectedMonthDate;
+    const today = todayISO();
+    if ($('.month-day[data-date="' + today + '"]')) return today;
+    return $('.month-day:not(.outside-month)')?.dataset.date || $('.month-day[data-date]')?.dataset.date || today;
   }
 
   function formatAgendaDate(iso) {
-    const parts = iso.split('-').map(Number);
-    return new Date(parts[0],parts[1]-1,parts[2]).toLocaleDateString('es-ES',{
-      weekday:'long',
-      day:'numeric',
-      month:'long'
-    });
+    const [y,m,d] = String(iso).split('-').map(Number);
+    return new Date(y,m-1,d).toLocaleDateString('es-ES',{weekday:'long',day:'numeric',month:'long'});
   }
 
   function selectMonthDate(iso) {
     if (!iso) return;
     selectedMonthDate = iso;
-
-    $$('.month-day').forEach(cell => {
-      cell.classList.toggle('mobile-selected-day',cell.dataset.date === iso);
-    });
-
+    $$('.month-day').forEach(cell => cell.classList.toggle('mobile-selected-day',cell.dataset.date === iso));
     renderMobileAgenda();
   }
 
   function renderMobileAgenda() {
     if (!isMobile()) return;
-
     const iso = currentSelectedMonthDate();
     selectedMonthDate = iso;
 
-    const title = $('#mobileAgendaTitle');
+    if ($('#mobileAgendaTitle')) $('#mobileAgendaTitle').textContent = formatAgendaDate(iso);
     const list = $('#mobileAgendaList');
-    if (!title || !list) return;
+    if (!list) return;
 
-    title.textContent = formatAgendaDate(iso);
-
-    const sourceCell = $('.month-day[data-date="' + iso + '"]');
-    const chips = sourceCell ? [...sourceCell.querySelectorAll('.month-event-chip')] : [];
+    const source = $('.month-day[data-date="' + iso + '"]');
+    const chips = source ? [...source.querySelectorAll('.month-event-chip')] : [];
 
     if (!chips.length) {
-      list.innerHTML =
-        '<button type="button" class="mobile-agenda-empty" data-mobile-add-date="' + iso + '">' +
-        'Nada apuntado. Toca para añadir algo.' +
-        '</button>';
+      list.innerHTML = '<button type="button" class="mobile-agenda-empty" data-mobile-add-date="' + iso + '">Nada apuntado. Toca para añadir algo.</button>';
       return;
     }
 
     list.innerHTML = '';
-    for (const chip of chips) {
+    chips.forEach(chip => {
       const clone = chip.cloneNode(true);
       clone.removeAttribute('draggable');
       clone.classList.add('mobile-agenda-event');
       clone.addEventListener('click',() => {
-        const original = $('.month-event-chip[data-month-event-id="' + chip.dataset.monthEventId + '"]');
-        original?.click();
+        if (!editUnlocked) {
+          notify('Activa la edición arriba para modificar eventos.');
+          return;
+        }
+        $('.month-event-chip[data-month-event-id="' + chip.dataset.monthEventId + '"]')?.click();
       });
       list.appendChild(clone);
-    }
+    });
   }
 
   function openAddForSelectedMonthDay() {
+    if (!editUnlocked) {
+      notify('Activa la edición arriba para añadir elementos.');
+      return;
+    }
     const iso = currentSelectedMonthDate();
-    const button = $('[data-add-date="' + iso + '"]');
-    if (button) button.click();
+    const add = $('[data-add-date="' + iso + '"]');
+    if (add) add.click();
     else $('#addMonthEventBtn')?.click();
   }
 
-  function bindMobileUI() {
-    $('#mobileEditToggle')?.addEventListener('click',() => {
-      setEditUnlocked(!editUnlocked);
-    });
+  function bindUI() {
+    $('#mobileEditToggle')?.addEventListener('click',() => setEditUnlocked(!editUnlocked));
 
-    document.addEventListener('pointerdown',event => {
-      if (!isMobile() || editUnlocked) return;
-
-      const blocked = event.target.closest(
-        '.event, .resize-handle, .subject-chip, .mobile-agenda-event, #addMonthEventBtn, #mobileAgendaAdd, #earlierBtn, #laterBtn, #shorterBtn, #longerBtn, #deleteSelectedBtn'
-      );
-
-      if (!blocked) return;
-      event.preventDefault();
-      event.stopImmediatePropagation();
-    },true);
-
-    document.addEventListener('contextmenu',event => {
-      if (!isMobile() || editUnlocked) return;
-      if (!event.target.closest('.event')) return;
-      event.preventDefault();
-      event.stopImmediatePropagation();
-    },true);
-
-    document.addEventListener('click',event => {
-      if (!isMobile() || editUnlocked) return;
-
-      const blocked = event.target.closest(
-        '.day-column, .subject-chip, .mobile-agenda-event, #addMonthEventBtn, #mobileAgendaAdd, #earlierBtn, #laterBtn, #shorterBtn, #longerBtn, #deleteSelectedBtn, [data-mobile-add-date]'
-      );
-
-      if (!blocked) return;
-      event.preventDefault();
-      event.stopImmediatePropagation();
-      notify('Activa la edición arriba para modificar el horario.');
-    },true);
-
-    $$('.mobile-day-tab').forEach(btn => {
-      btn.addEventListener('click',() => setMobileDay(btn.dataset.mobileDay));
+    $$('.mobile-day-tab').forEach(button => {
+      button.addEventListener('click',() => setMobileDay(button.dataset.mobileDay));
     });
 
     $('#mobileFiltersBtn')?.addEventListener('click',() => {
-      openSheet($('.filters-card'),'Filtros');
+      const filters = currentView() === 'month' ? $('#monthView .filters-card') : $('#weekView .filters-card');
+      openSheet(filters,'Filtros');
     });
 
     $('#closeMobileSheet')?.addEventListener('click',closeSheet);
@@ -405,11 +353,10 @@
     $('#mobileBottomNav')?.addEventListener('click',event => {
       const button = event.target.closest('[data-mobile-nav]');
       if (!button) return;
-
       const action = button.dataset.mobileNav;
 
       if (action === 'week' || action === 'month') {
-        switchView(action);
+        switchBaseView(action);
         return;
       }
 
@@ -425,17 +372,14 @@
           return;
         }
 
-        if (currentView() === 'month') {
-          openAddForSelectedMonthDay();
-        } else {
-          const subjectCard = $('#subjectList')?.closest('.side-card');
-          openSheet(subjectCard,'Añadir asignatura');
-        }
+        const view = currentView();
+        if (view === 'month') openAddForSelectedMonthDay();
+        else if (view === 'week') openSheet($('#weekView .side-card'),'Añadir asignatura');
+        else notify('Vuelve a Semana o Mes para añadir elementos.');
       }
     });
 
     $('#mobileAgendaAdd')?.addEventListener('click',openAddForSelectedMonthDay);
-
     $('#mobileDayAgenda')?.addEventListener('click',event => {
       const empty = event.target.closest('[data-mobile-add-date]');
       if (!empty) return;
@@ -443,31 +387,51 @@
       openAddForSelectedMonthDay();
     });
 
+    document.addEventListener('pointerdown',event => {
+      if (!isMobile() || editUnlocked) return;
+      const blocked = event.target.closest(
+        '.event,.resize-handle,.subject-chip,.mobile-agenda-event,#addMonthEventBtn,#mobileAgendaAdd,#earlierBtn,#laterBtn,#shorterBtn,#longerBtn,#deleteSelectedBtn'
+      );
+      if (!blocked) return;
+      event.preventDefault();
+      event.stopImmediatePropagation();
+    },true);
+
+    document.addEventListener('contextmenu',event => {
+      if (!isMobile() || editUnlocked || !event.target.closest('.event')) return;
+      event.preventDefault();
+      event.stopImmediatePropagation();
+    },true);
+
+    document.addEventListener('click',event => {
+      if (!isMobile() || editUnlocked) return;
+      const blocked = event.target.closest(
+        '.day-column,.subject-chip,.mobile-agenda-event,#addMonthEventBtn,#mobileAgendaAdd,#earlierBtn,#laterBtn,#shorterBtn,#longerBtn,#deleteSelectedBtn,[data-mobile-add-date]'
+      );
+      if (!blocked) return;
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      notify('Activa la edición arriba para modificar el horario.');
+    },true);
+
     $('#monthGrid')?.addEventListener('click',event => {
       if (!isMobile()) return;
-
       if (event.target.closest('[data-add-date]')) return;
-
       const chip = event.target.closest('[data-month-event-id]');
       if (chip && editUnlocked) return;
-
       const cell = event.target.closest('.month-day[data-date]');
       if (!cell) return;
-
       event.preventDefault();
       event.stopImmediatePropagation();
       selectMonthDate(cell.dataset.date);
     },true);
 
-    const monthObserver = new MutationObserver(() => {
-      if (!isMobile()) return;
-      requestAnimationFrame(() => {
-        selectMonthDate(currentSelectedMonthDate());
-      });
-    });
-
     if ($('#monthGrid')) {
-      monthObserver.observe($('#monthGrid'),{childList:true,subtree:true});
+      const observer = new MutationObserver(() => {
+        if (!isMobile()) return;
+        requestAnimationFrame(() => selectMonthDate(currentSelectedMonthDate()));
+      });
+      observer.observe($('#monthGrid'),{childList:true,subtree:true});
     }
 
     document.addEventListener('keydown',event => {
@@ -475,6 +439,7 @@
     });
 
     window.addEventListener('resize',applyResponsiveState,{passive:true});
+    document.addEventListener('planner:skinchange',syncEditLockUI);
   }
 
   function applyResponsiveState() {
@@ -493,6 +458,23 @@
     syncEditLockUI();
   }
 
-  createMobileUI();
+  function loadGameSystem() {
+    if ($('#plannerGameScript')) return;
+    const game = document.createElement('script');
+    game.id = 'plannerGameScript';
+    game.src = './game.js?v=16';
+    game.onload = () => {
+      if ($('#plannerGameFixes')) return;
+      const fixes = document.createElement('script');
+      fixes.id = 'plannerGameFixes';
+      fixes.src = './game-fixes.js?v=16';
+      document.head.appendChild(fixes);
+    };
+    document.head.appendChild(game);
+  }
+
+  ensureMobileUI();
+  bindUI();
   applyResponsiveState();
+  loadGameSystem();
 })();
