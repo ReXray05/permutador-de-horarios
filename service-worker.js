@@ -1,4 +1,4 @@
-const CACHE_NAME = 'planificador-semanal-v14';
+const CACHE_NAME = 'planificador-semanal-v15';
 const APP_SHELL = [
   './',
   './index.html',
@@ -7,6 +7,7 @@ const APP_SHELL = [
   './month.js?v=13',
   './mobile.js?v=13',
   './game.js?v=14',
+  './game-fixes.js?v=15',
   './manifest.webmanifest',
   './icons/icon.svg'
 ];
@@ -32,7 +33,7 @@ self.addEventListener('activate', event => {
 async function injectGameLoader(response) {
   if (!response) return response;
   const text = await response.text();
-  const marker = 'planner-game-loader-v14';
+  const marker = 'planner-game-loader-v15';
   if (text.includes(marker)) {
     return new Response(text, {
       status: response.status,
@@ -41,7 +42,7 @@ async function injectGameLoader(response) {
     });
   }
 
-  const injected = text + `\n;/* ${marker} */(() => {\n  if (document.getElementById('plannerGameScript')) return;\n  const script = document.createElement('script');\n  script.id = 'plannerGameScript';\n  script.src = './game.js?v=14';\n  script.defer = true;\n  document.head.appendChild(script);\n})();\n`;
+  const injected = text + `\n;/* ${marker} */(() => {\n  if (document.getElementById('plannerGameScript')) return;\n  const game = document.createElement('script');\n  game.id = 'plannerGameScript';\n  game.src = './game.js?v=14';\n  game.onload = () => {\n    if (document.getElementById('plannerGameFixes')) return;\n    const fixes = document.createElement('script');\n    fixes.id = 'plannerGameFixes';\n    fixes.src = './game-fixes.js?v=15';\n    document.head.appendChild(fixes);\n  };\n  document.head.appendChild(game);\n})();\n`;
 
   const headers = new Headers(response.headers);
   headers.set('content-type','application/javascript; charset=utf-8');
