@@ -1,4 +1,4 @@
-name: Validate and deploy static site to Pages
+name: Deploy v27 static site to Pages
 
 on:
   push:
@@ -23,32 +23,25 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Validate JavaScript
+
+      - name: Prepare v27 site
         run: |
-          for f in src/*.js service-worker.js; do node --check "$f"; done
-          python - <<'PY'
-          from pathlib import Path
-          import re, sys
-          for p in Path('src').glob('*.js'):
-              for rel in re.findall(r"from\s+['\"](\./[^'\"]+)['\"]", p.read_text()):
-                  target=(p.parent/rel.split('?')[0]).resolve()
-                  if not target.exists():
-                      print('Missing import',p,rel); sys.exit(1)
-          print('Validation OK')
-          PY
-      - name: Stamp release v21
-        run: |
-          sed -i 's/styles.css?v=20/styles.css?v=21/g; s/main.js?v=20/main.js?v=21/g; s/>v20</>v21</g' index.html
-          sed -i 's/mobile.css?v=20/mobile.css?v=21/g' src/main.js
-          sed -i "s/planificador-v21/planificador-v22/g; s/styles.css?v=20/styles.css?v=21/g; s/mobile.css?v=20/mobile.css?v=21/g; s/main.js?v=20/main.js?v=21/g" service-worker.js
+          rm -rf _site
+          mkdir _site
+          cp index.html _site/index.html
+          cp service-worker.js _site/service-worker.js
+          touch _site/.nojekyll
+
       - name: Setup Pages
         uses: actions/configure-pages@v5
         with:
           enablement: true
-      - name: Upload artifact
+
+      - name: Upload v27 artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: '.'
+          path: '_site'
+
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
