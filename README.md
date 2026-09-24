@@ -1,30 +1,18 @@
-# Planificador universitario
+# Planificador semanal · v27
 
-PWA estática y local-first para organizar horario semanal, calendario mensual, misiones y skins.
+Versión aprobada del planificador: `index.html` es autónomo e incluye sus estilos, lógica e imágenes. Los módulos anteriores se conservan en el historial y en el repositorio, pero esta página ya no los carga.
 
-## Arquitectura v20
+- Horario semanal editable, selección, duración, LAB, marcos, filtros y deshacer.
+- 22 asignaturas de tercero, cuarto e Italia; creación de asignaturas y grupos plegables.
+- Varios horarios con importación y exportación JSON.
+- Seis skins, textos temáticos y exportaciones con la skin activa.
+- 32 preguntas de cultura general: 25 monedas por acierto, una recompensa por pregunta y bloqueo hasta el siguiente día local tras fallar.
+- Ajustes de apariencia y códigos de prueba: `retitos` (saldo infinito), `rosita` (apariencia rosa para Clásica), `borrar` (reinicio con confirmación).
 
-La aplicación se reescribió para eliminar parches e inyecciones dinámicas. El HTML carga un único punto de entrada ES Module (`src/main.js`) y cada responsabilidad vive en su propio módulo:
+Los datos se guardan en el navegador, sin servidor ni cuenta. Las monedas son ficticias. Los códigos son utilidades locales de prueba, no secretos ni controles de seguridad. Exporta tus horarios a JSON para conservar copias.
 
-- `src/config.js`: asignaturas, horario base, skins y preguntas.
-- `src/storage.js`: persistencia, migración y copias de seguridad.
-- `src/ui.js`: temas, skins, textos y utilidades de interfaz.
-- `src/weekly.js`: horario semanal, edición, filtros y exportación.
-- `src/month.js`: calendario mensual, eventos e ICS.
-- `src/game.js`: monedas, tienda, skins y misiones.
-- `src/main.js`: arranque, navegación, ajustes y PWA.
-- `styles.css` + `src/mobile.css`: estilos base y adaptación móvil.
+## Publicación
 
-No hay backend, cuentas ni base de datos. Los datos siguen guardándose en `localStorage`, conservando las claves usadas por versiones anteriores.
+GitHub Actions publica la rama `main` en https://rexray05.github.io/permutador-de-horarios/.
 
-## PWA
-
-`service-worker.js` usa una caché simple con prioridad de red para evitar quedarse atascado en versiones antiguas. No modifica JavaScript ni inyecta módulos en tiempo de ejecución.
-
-## Desarrollo local
-
-```bash
-python -m http.server 8080
-```
-
-Abre `http://localhost:8080`.
+`service-worker.js` actualiza la caché de instalaciones anteriores y da prioridad a la red. El archivo autónomo puede abrirse directamente o servirse con cualquier servidor estático.
